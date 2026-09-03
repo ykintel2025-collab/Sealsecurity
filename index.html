@@ -88,6 +88,16 @@
                         </div>
                     </div>
                     <textarea id="omschrijving" rows="4" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    
+                    <!-- Optie om spraak naar tekst om te zetten -->
+                    <div id="transcribeOptionContainer" class="hidden mt-2 p-2.5 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-between">
+                        <span class="text-xs text-slate-300">Spraakbericht direct omzetten naar tekst in omschrijving?</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="transcribeToggle" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+
                     <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Spraakbericht wordt opgenomen... Klik nogmaals op de knop om te stoppen.</p>
                 </div>
 
@@ -196,27 +206,31 @@
 
             let mediaBase64 = null;
             let mediaType = null;
+            let audioBase64Data = null; // Specifiek voor het spraakbericht
 
             if (editId) {
                 const existing = allLogs.find(item => item.id == editId);
                 if (existing) {
                     mediaBase64 = existing.mediaData || null;
                     mediaType = existing.mediaType || null;
+                    audioBase64Data = existing.audioData || null;
                 }
             }
 
             const processMedia = async () => {
                 if (audioBlob) {
-                    mediaBase64 = await blobToDataURL(audioBlob);
-                    mediaType = 'audio';
-                } else if (mediaInput.files && mediaInput.files[0]) {
+                    audioBase64Data = await blobToDataURL(audioBlob);
+                }
+                
+                if (mediaInput.files && mediaInput.files[0]) {
                     const file = mediaInput.files[0];
                     mediaBase64 = await readFileAsDataURL(file);
                     if (file.type.startsWith('image/')) mediaType = 'image';
                     else if (file.type.startsWith('video/')) mediaType = 'video';
                     else mediaType = 'file';
                 }
-                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaBase64, mediaType);
+
+                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaBase64, mediaType, audioBase64Data);
             };
 
             processMedia();
@@ -238,13 +252,13 @@
             });
         }
 
-        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaData, mediaType) {
+        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData) {
             try {
                 if (editId) {
                     const docRef = doc(db, "logboek", editId);
-                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, mediaData, mediaType });
+                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData });
                 } else {
-                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, mediaData, mediaType, createdAt: Date.now() });
+                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData, createdAt: Date.now() });
                 }
 
                 audioBlob = null;
@@ -289,6 +303,7 @@
             document.getElementById('formTitle').innerText = 'Nieuwe Gebeurtenis Registreren';
             document.getElementById('submitBtn').innerText = 'Opslaan';
             document.getElementById('cancelEditBtn').classList.add('hidden');
+            document.getElementById('transcribeOptionContainer').classList.add('hidden');
             audioBlob = null;
             setDefaultTime();
         }
@@ -348,37 +363,41 @@
                         </div>
                     </div>
 
-                    <!-- Uitklapbaar gedeelte (Standaard verborgen) -->
+                    <!-- Uitklapbaar gedeelte -->
                     <div id="card-body-${item.id}" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-3">
                         <div>
                             <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Volledige omschrijving:</h4>
                             <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">${item.omschrijving}</p>
                         </div>
 
-                        <!-- Media weergave in uitklapmenu -->
-                        ${item.mediaData ? `
-                            <div>
-                                <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Bijgevoegde Media:</h4>
-                                <div class="flex flex-wrap gap-3">
-                                    ${item.mediaType === 'image' ? `
-                                        <div>
-                                            <img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
-                                            <span class="block text-[10px] text-center text-slate-400 mt-1">Foto</span>
-                                        </div>
-                                    ` : item.mediaType === 'video' ? `
-                                        <div>
-                                            <video src="${item.mediaData}" onclick="openMediaModal('video', '${item.mediaData}')" class="h-24 w-32 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" muted></video>
-                                            <span class="block text-[10px] text-center text-slate-400 mt-1">Video</span>
-                                        </div>
-                                    ` : item.mediaType === 'audio' ? `
-                                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col gap-2">
-                                            <span class="text-[10px] text-slate-400">🎙️ Spraakbericht</span>
-                                            <audio controls src="${item.mediaData}" class="h-10"></audio>
-                                        </div>
-                                    ` : ''}
+                        <!-- Media & Spraakbericht weergave -->
+                        <div class="flex flex-col gap-3">
+                            ${item.audioData ? `
+                                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                    <span class="text-xs font-medium text-indigo-400 block mb-1">🎙️ Opgeslagen Spraakbericht:</span>
+                                    <audio controls src="${item.audioData}" class="w-full h-10"></audio>
                                 </div>
-                            </div>
-                        ` : ''}
+                            ` : ''}
+
+                            ${item.mediaData ? `
+                                <div>
+                                    <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Bijgevoegde Media:</h4>
+                                    <div class="flex flex-wrap gap-3">
+                                        ${item.mediaType === 'image' ? `
+                                            <div>
+                                                <img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
+                                                <span class="block text-[10px] text-center text-slate-400 mt-1">Foto</span>
+                                            </div>
+                                        ` : item.mediaType === 'video' ? `
+                                            <div>
+                                                <video src="${item.mediaData}" onclick="openMediaModal('video', '${item.mediaData}')" class="h-24 w-32 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" muted></video>
+                                                <span class="block text-[10px] text-center text-slate-400 mt-1">Video</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -406,18 +425,22 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // Handmatige spraakrecorder (blijft doorlopen tot je stopt)
+        // Handmatige spraakrecorder + optionele live spraak-naar-tekst omzetting
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
         let isRecordingAudio = false;
+        let speechRecognitionInstance = null;
 
         window.toggleAudioRecording = async function() {
             const statusEl = document.getElementById('speechStatus');
             const micBtn = document.getElementById('micBtn');
+            const transcribeOptionContainer = document.getElementById('transcribeOptionContainer');
+            const transcribeToggle = document.getElementById('transcribeToggle');
 
             if (!isRecordingAudio) {
                 try {
+                    // Start audio opname voor opslag
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
@@ -428,7 +451,6 @@
 
                     mediaRecorder.onstop = () => {
                         audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        document.getElementById('omschrijving').value = "[Spraakbericht toegevoegd bij deze melding]";
                     };
 
                     mediaRecorder.start();
@@ -436,17 +458,50 @@
                     statusEl.classList.remove('hidden');
                     micBtn.innerText = "⏹️ Stop opname";
                     micBtn.classList.add('bg-red-600', 'text-white');
+                    transcribeOptionContainer.classList.remove('hidden');
+
+                    // Optioneel: als de gebruiker de schakelaar aan heeft gezet, start ook live tekstherkenning
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (SpeechRecognition && transcribeToggle.checked) {
+                        speechRecognitionInstance = new SpeechRecognition();
+                        speechRecognitionInstance.lang = 'nl-NL';
+                        speechRecognitionInstance.interimResults = true;
+                        speechRecognitionInstance.continuous = true;
+
+                        speechRecognitionInstance.onresult = (event) => {
+                            let transcript = '';
+                            for (let i = event.resultIndex; i < event.results.length; i++) {
+                                transcript += event.results[i][0].transcript;
+                            }
+                            document.getElementById('omschrijving').value = transcript;
+                        };
+                        speechRecognitionInstance.start();
+                    }
+
                 } catch (err) {
                     alert("Microfoonrechten geweigerd of niet beschikbaar op dit apparaat.");
                 }
             } else {
+                // Stop audio opname
                 mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
+                if (speechRecognitionInstance) {
+                    speechRecognitionInstance.stop();
+                }
+
                 isRecordingAudio = false;
                 statusEl.classList.add('hidden');
                 micBtn.innerText = "🎙️ Spraakbericht opnemen";
                 micBtn.classList.remove('bg-red-600', 'text-white');
                 micBtn.classList.add('bg-slate-800', 'text-indigo-300');
+                
+                // Als schakelaar aan stond, melding geven dat tekst is ingevuld
+                if (transcribeToggle.checked) {
+                    // Laat ingevulde tekst staan
+                } else {
+                    document.getElementById('omschrijving').value = "[Spraakbericht toegevoegd]";
+                }
             }
         }
 
