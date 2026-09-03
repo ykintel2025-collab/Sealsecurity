@@ -9,26 +9,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans p-4 md:p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans p-3 md:p-8">
 
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-4xl mx-auto">
         <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-slate-800 pb-4 gap-3">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
                     🛡️ Dienst Logboek <span class="text-xs bg-amber-600 px-2 py-0.5 rounded-full text-white">Seal Security</span>
                 </h1>
-                <p class="text-sm text-slate-400">Onbeperkte projecten, spraakherkenning, zoeken & professionele PDF</p>
+                <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media & uitklapbare inspectie</p>
             </div>
-            <div class="flex gap-2 w-full md:w-auto">
-                <button onclick="exportPDF()" class="flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                    📄 Professionele PDF
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="exportPDF()" class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
+                    📄 Exporteer PDF
                 </button>
             </div>
         </header>
 
         <!-- Zoek- en Filterbalk -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 shadow grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-5 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
                 <input type="text" id="searchInput" oninput="filterLogs()" placeholder="Zoek op tekst, locatie..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -52,9 +52,9 @@
         </div>
 
         <!-- Invoer Formulier -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-8 shadow-lg">
-            <h2 id="formTitle" class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
-            <form id="logForm" onsubmit="saveEntry(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 mb-8 shadow-lg">
+            <h2 id="formTitle" class="text-base sm:text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
+            <form id="logForm" onsubmit="saveEntry(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input type="hidden" id="editId">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Tijdstip</label>
@@ -70,27 +70,36 @@
                         <option value="Overdracht">Overdracht</option>
                     </select>
                 </div>
-                <div>
+                <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Locatie</label>
-                    <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2 / Terrein" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
-                <div class="md:col-span-4">
+                <div class="sm:col-span-2">
                     <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie (Uitgebreid)</label>
-                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2 py-0.5 rounded flex items-center gap-1 transition">
+                        <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie</label>
+                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md flex items-center gap-1 transition">
                             🎤 Spreek in
                         </button>
                     </div>
                     <textarea id="omschrijving" rows="4" placeholder="Typ of spreek de gedetailleerde gebeurtenis in..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
                     <p id="speechStatus" class="text-xs text-indigo-400 mt-1 hidden">Luisteren... Spreek nu duidelijk in.</p>
                 </div>
-                <div class="md:col-span-4">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Foto / Afbeelding toevoegen</label>
-                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
+
+                <!-- Mobiele Media Opties: Foto & Video -->
+                <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">📸 Foto (Maken of Kiezen)</label>
+                        <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">📹 Video (Opnemen of Kiezen)</label>
+                        <input type="file" id="videoInput" accept="video/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
+                    </div>
                 </div>
-                <div class="md:col-span-4 flex justify-end gap-2">
+
+                <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
                     <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm transition">Annuleren</button>
-                    <button type="submit" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition shadow-md">
+                    <button type="submit" id="submitBtn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-md">
                         + Toevoegen aan Database
                     </button>
                 </div>
@@ -100,18 +109,21 @@
         <!-- Overzicht Kaartenlijst -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center">
-                <h3 class="font-semibold text-slate-200">Geregistreerde Incidenten & Gebeurtenissen</h3>
+                <h3 class="font-semibold text-slate-200 text-sm sm:text-base">Geregistreerde Incidenten & Gebeurtenissen</h3>
                 <span id="entryCount" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full">0 items</span>
             </div>
             <div id="logsContainer" class="divide-y divide-slate-800">
-                <!-- Dynamische kaarten -->
+                <!-- Dynamische uitklapbare kaarten -->
             </div>
         </div>
     </div>
 
-    <!-- Modal voor foto vergroten -->
-    <div id="imageModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
-        <img id="modalImg" class="max-h-[90vh] max-w-[90vw] rounded-lg border border-slate-700">
+    <!-- Modal voor media vergroten -->
+    <div id="mediaModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4" onclick="closeMediaModal()">
+        <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
+            <button onclick="closeMediaModal()" class="absolute -top-10 right-0 text-white bg-slate-800 px-3 py-1 rounded-lg text-sm">Sluiten ✕</button>
+            <div id="modalContentContainer"></div>
+        </div>
     </div>
 
     <!-- Firebase SDK's (Modular v10) -->
@@ -132,7 +144,6 @@
             measurementId: "G-FM2RBMCT9F"
         };
 
-        // Initialiseer Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -166,7 +177,7 @@
             }
         }
 
-        // Opslaan of Bewerken in Firestore
+        // Opslaan of Bewerken in Firestore (inclusief conversie van foto en video naar base64)
         window.saveEntry = async function(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -174,33 +185,50 @@
             const categorie = document.getElementById('categorie').value;
             const locatie = document.getElementById('locatie').value;
             const omschrijving = document.getElementById('omschrijving').value;
+            
             const fotoInput = document.getElementById('fotoInput');
+            const videoInput = document.getElementById('videoInput');
 
             let fotoBase64 = null;
+            let videoBase64 = null;
+
             if (editId) {
                 const existing = allLogs.find(item => item.id == editId);
-                fotoBase64 = existing ? existing.foto : null;
+                if (existing) {
+                    fotoBase64 = existing.foto || null;
+                    videoBase64 = existing.video || null;
+                }
             }
 
-            if (fotoInput.files && fotoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(uploadEvent) {
-                    fotoBase64 = uploadEvent.target.result;
-                    await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64);
-                };
-                reader.readAsDataURL(fotoInput.files[0]);
-            } else {
-                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64);
-            }
+            // Hulpfunctie om bestanden te verwerken
+            const processFiles = async () => {
+                if (fotoInput.files && fotoInput.files[0]) {
+                    fotoBase64 = await readFileAsDataURL(fotoInput.files[0]);
+                }
+                if (videoInput.files && videoInput.files[0]) {
+                    videoBase64 = await readFileAsDataURL(videoInput.files[0]);
+                }
+                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64, videoBase64);
+            };
+
+            processFiles();
         }
 
-        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, foto) {
+        function readFileAsDataURL(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, foto, video) {
             try {
                 if (editId) {
                     const docRef = doc(db, "logboek", editId);
-                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, foto });
+                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, foto, video });
                 } else {
-                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, foto, createdAt: Date.now() });
+                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, foto, video, createdAt: Date.now() });
                 }
 
                 resetForm();
@@ -269,6 +297,7 @@
             renderLogs(allLogs);
         }
 
+        // Renderen van uitklapbare log-kaarten
         function renderLogs(logsToRender) {
             const container = document.getElementById('logsContainer');
             document.getElementById('entryCount').innerText = `${logsToRender.length} items`;
@@ -279,39 +308,90 @@
             }
 
             container.innerHTML = logsToRender.map(item => `
-                <div class="p-5 hover:bg-slate-900/50 transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="space-y-1 flex-1">
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                            <span class="font-mono text-amber-400">${item.tijd}</span>
-                            <span>•</span>
-                            <span class="bg-slate-800 text-slate-200 px-2 py-0.5 rounded">${item.categorie}</span>
-                            <span>•</span>
-                            <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
+                <div class="p-4 sm:p-5 hover:bg-slate-900/40 transition">
+                    <!-- Compacte balk (klik om te openen/sluiten) -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer" onclick="toggleCard('${item.id}')">
+                        <div class="space-y-1 flex-1">
+                            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                                <span class="font-mono text-amber-400 font-semibold">${item.tijd}</span>
+                                <span>•</span>
+                                <span class="bg-slate-800 text-slate-200 px-2 py-0.5 rounded">${item.categorie}</span>
+                                <span>•</span>
+                                <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
+                            </div>
+                            <p class="text-slate-300 text-sm line-clamp-1 mt-1">${item.omschrijving}</p>
                         </div>
-                        <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed mt-2 bg-slate-950/50 p-3 rounded-lg border border-slate-800/80">${item.omschrijving}</p>
-                        ${item.foto ? `
-                            <div class="mt-2">
-                                <img src="${item.foto}" onclick="openImageModal('${item.foto}')" class="h-20 w-20 object-cover rounded border border-slate-800 cursor-pointer hover:opacity-80 transition shadow" title="Klik om te vergroten">
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                            <span class="text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2.5 py-1 rounded-md">Openen ▾</span>
+                            <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                                <button onclick="editEntry('${item.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition">Bewerken</button>
+                                <button onclick="deleteEntry('${item.id}')" class="bg-red-900/30 hover:bg-red-900/50 text-red-400 px-2.5 py-1 rounded text-xs transition">Wis</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Uitklapbaar gedeelte (Standaard verborgen) -->
+                    <div id="card-body-${item.id}" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-3">
+                        <div>
+                            <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Volledige omschrijving:</h4>
+                            <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">${item.omschrijving}</p>
+                        </div>
+
+                        <!-- Media weergave in uitklapmenu -->
+                        ${(item.foto || item.video) ? `
+                            <div>
+                                <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Bijgevoegde Media:</h4>
+                                <div class="flex flex-wrap gap-3">
+                                    ${item.foto ? `
+                                        <div>
+                                            <img src="${item.foto}" onclick="openMediaModal('image', '${item.foto}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
+                                            <span class="block text-[10px] text-center text-slate-400 mt-1">Foto</span>
+                                        </div>
+                                    ` : ''}
+                                    ${item.video ? `
+                                        <div>
+                                            <video src="${item.video}" onclick="openMediaModal('video', '${item.video}')" class="h-24 w-32 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" muted></video>
+                                            <span class="block text-[10px] text-center text-slate-400 mt-1">Video</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
                             </div>
                         ` : ''}
-                    </div>
-                    <div class="flex items-center gap-2 self-end md:self-center">
-                        <button onclick="editEntry('${item.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded text-xs transition">Bewerken</button>
-                        <button onclick="deleteEntry('${item.id}')" class="bg-red-900/30 hover:bg-red-900/50 text-red-400 px-3 py-1.5 rounded text-xs transition">Verwijder</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Modals & Spraakherkenning globaal beschikbaar maken
-        window.openImageModal = function(src) {
-            document.getElementById('modalImg').src = src;
-            document.getElementById('imageModal').classList.remove('hidden');
-        }
-        window.closeImageModal = function() {
-            document.getElementById('imageModal').classList.add('hidden');
+        // Functie om een log-kaart open of dicht te klappen
+        window.toggleCard = function(id) {
+            const body = document.getElementById(`card-body-${id}`);
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+            } else {
+                body.classList.add('hidden');
+            }
         }
 
+        // Media Modal (Vergroten van foto of afspelen van video)
+        window.openMediaModal = function(type, src) {
+            const modal = document.getElementById('mediaModal');
+            const container = document.getElementById('modalContentContainer');
+            
+            if (type === 'image') {
+                container.innerHTML = `<img src="${src}" class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700">`;
+            } else if (type === 'video') {
+                container.innerHTML = `<video src="${src}" controls autoplay class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700"></video>`;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        window.closeMediaModal = function() {
+            document.getElementById('mediaModal').classList.add('hidden');
+            document.getElementById('modalContentContainer').innerHTML = '';
+        }
+
+        // Spraakherkenning
         let recognition;
         let isRecording = false;
         window.toggleSpeechRecognition = function() {
@@ -361,8 +441,8 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            doc.setFontSize(18);
-            doc.text("Officiële Dienstrapportage & Incidentenlogboek", 14, 20);
+            doc.setFontSize(16);
+            doc.text("Officiële Dienstrapportage - Seal Security", 14, 20);
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Gegenereerd op: ${new Date().toLocaleString('nl-NL')}`, 14, 28);
@@ -380,11 +460,11 @@
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [41, 37, 36] },
-                styles: { fontSize: 9, cellPadding: 4, overflow: 'linebreak' },
+                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
                 columnStyles: { 
-                    0: { cellWidth: 32 }, 
-                    1: { cellWidth: 30 }, 
-                    2: { cellWidth: 30 }, 
+                    0: { cellWidth: 30 }, 
+                    1: { cellWidth: 28 }, 
+                    2: { cellWidth: 28 }, 
                     3: { cellWidth: 'auto' } 
                 }
             });
