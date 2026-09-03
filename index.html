@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dienst Logboek - Beveiliging</title>
+    <!-- Tailwind CSS voor een strakke, professionele Vercel/GitHub-look -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS voor Excel/CSV export en jsPDF voor PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                    🛡️ Dienst Logboek
+                </h1>
+                <p class="text-sm text-slate-400">Beveiliging & Incidenten Registratie</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-2">
+                <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
+                    📄 Export PDF
+                </button>
+                <button onclick="clearLog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition">
+                    Wissen
+                </button>
+            </div>
+        </header>
+
+        <!-- Invoer Formulier -->
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-5 mb-8 shadow-lg">
+            <h2 class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Toevoegen</h2>
+            <form id="logForm" onsubmit="addEntry(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tijdstip</label>
+                    <input type="datetime-local" id="tijd" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Categorie</label>
+                    <select id="categorie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="Incidenteel / Melding">Incidenteel / Melding</option>
+                        <option value="Ronde / Controle">Ronde / Controle</option>
+                        <option value="Bezoeker / Levering">Bezoeker / Levering</option>
+                        <option value="Bijzonderheid">Bijzonderheid</option>
+                        <option value="Overdracht">Overdracht</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Locatie</label>
+                    <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Omschrijving / Actie</label>
+                    <textarea id="omschrijving" rows="2" placeholder="Beschrijf de gebeurtenis helder en feitelijk..." required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+                <div class="md:col-span-4 flex justify-end">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition shadow-md">
+                        + Toevoegen aan Logboek
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Logboek Overzicht -->
+        <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl overflow-hidden shadow-lg">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-semibold text-slate-200">Geregistreerde Gebeurtenissen</h3>
+                <span id="entryCount" class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-full">0 items</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-700 text-xs text-slate-400 bg-slate-900/50 uppercase">
+                            <th class="p-3">Tijd</th>
+                            <th class="p-3">Categorie</th>
+                            <th class="p-3">Locatie</th>
+                            <th class="p-3">Omschrijving</th>
+                            <th class="p-3 text-right">Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody" class="divide-y divide-slate-800 text-sm">
+                        <!-- Wordt dynamisch gevuld -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Automatisch huidige tijd invullen bij laden
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('tijd').value = now.toISOString().slice(0,16);
+            loadEntries();
+        });
+
+        let logs = JSON.parse(localStorage.getItem('beveiligings_logs')) || [];
+
+        function addEntry(e) {
+            e.preventDefault();
+            const entry = {
+                id: Date.now(),
+                tijd: document.getElementById('tijd').value.replace('T', ' '),
+                categorie: document.getElementById('categorie').value,
+                locatie: document.getElementById('locatie').value,
+                omschrijving: document.getElementById('omschrijving').value
+            };
+
+            logs.unshift.call(logs, entry); // Nieuwste bovenaan
+            saveAndRender();
+            
+            // Formulier resetten behalve datum/tijd
+            document.getElementById('omschrijving').value = '';
+            document.getElementById('locatie').value = '';
+        }
+
+        function deleteEntry(id) {
+            if(confirm('Weet je zeker dat je dit logitem wilt verwijderen?')) {
+                logs = logs.filter(item => item.id !== id);
+                saveAndRender();
+            }
+        }
+
+        function clearLog() {
+            if(confirm('Waarschuwing: Dit verwijdert het hele logboek op dit apparaat. Doorgaan?')) {
+                logs = [];
+                saveAndRender();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('beveiligings_logs', JSON.stringify(logs));
+            const tbody = document.getElementById('logTableBody');
+            document.getElementById('entryCount').innerText = `${logs.length} items`;
+            
+            if(logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nog geen gebeurtenissen geregistreerd voor deze dienst.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = logs.map(item => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="p-3 whitespace-nowrap text-slate-300 text-xs">${item.tijd}</td>
+                    <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 text-xs rounded bg-slate-700 text-slate-200">${item.categorie}</span></td>
+                    <td class="p-3 whitespace-nowrap text-slate-300">${item.locatie}</td>
+                    <td class="p-3 text-slate-100 max-w-xs truncate">${item.omschrijving}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteEntry(${item.id})" class="text-red-400 hover:text-red-300 text-xs">Verwijder</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text("Officiële Dienstrapportage / Logboek", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Gegenereerd op: ${new Date().toLocaleString('nl-NL')}`, 14, 28);
+
+            let y = 40;
+            logs.forEach((item, index) => {
+                if (y > 270) { doc.addPage(); y = 20; }
+                doc.setFont("helvetica", "bold");
+                doc.text(`[${item.tijd}] ${item.categorie} - ${item.locatie}`, 14, y);
+                doc.setFont("helvetica", "normal");
+                doc.text(item.omschrijving, 14, y + 6, { maxWidth: 180 });
+                y += 18;
+            });
+
+            doc.save(`dienstlogboek_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+    </script>
+</body>
+</html>
