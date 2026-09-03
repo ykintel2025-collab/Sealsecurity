@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dienst Logboek - Beveiliging</title>
-    <!-- Tailwind CSS voor een strakke, professionele Vercel/GitHub-look -->
+    <title>Dienst Logboek - Beveiliging Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS voor Excel/CSV export en jsPDF voor PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans p-4 md:p-8">
@@ -16,15 +14,15 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                    🛡️ Dienst Logboek
+                    🛡️ Dienst Logboek <span class="text-xs bg-indigo-600 px-2 py-0.5 rounded-full text-white">PRO</span>
                 </h1>
-                <p class="text-sm text-slate-400">Beveiliging & Incidenten Registratie</p>
+                <p class="text-sm text-slate-400">Inclusief Spraakherkenning & Foto-integratie</p>
             </div>
             <div class="mt-4 md:mt-0 flex gap-2">
                 <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
                     📄 Export PDF
                 </button>
-                <button onclick="clearLog()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition">
+                <button onclick="clearLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition">
                     Wissen
                 </button>
             </div>
@@ -32,7 +30,7 @@
 
         <!-- Invoer Formulier -->
         <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-5 mb-8 shadow-lg">
-            <h2 class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Toevoegen</h2>
+            <h2 class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
             <form id="logForm" onsubmit="addEntry(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Tijdstip</label>
@@ -41,7 +39,7 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Categorie</label>
                     <select id="categorie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                        <option value="Incidenteel / Melding">Incidenteel / Melding</option>
+                        <option value="Incident / Melding">Incident / Melding</option>
                         <option value="Ronde / Controle">Ronde / Controle</option>
                         <option value="Bezoeker / Levering">Bezoeker / Levering</option>
                         <option value="Bijzonderheid">Bijzonderheid</option>
@@ -53,8 +51,18 @@
                     <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div class="md:col-span-4">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Omschrijving / Actie</label>
-                    <textarea id="omschrijving" rows="2" placeholder="Beschrijf de gebeurtenis helder en feitelijk..." required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie</label>
+                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-700 hover:bg-slate-600 text-indigo-300 px-2 py-0.5 rounded flex items-center gap-1 transition">
+                            🎤 Spreek in (Speech-to-Text)
+                        </button>
+                    </div>
+                    <textarea id="omschrijving" rows="3" placeholder="Typ of spreek de gebeurtenis in..." required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    <p id="speechStatus" class="text-xs text-indigo-400 mt-1 hidden">Luisteren... Spreek nu duidelijk in.</p>
+                </div>
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Foto / Afbeelding toevoegen (Optioneel)</label>
+                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer">
                 </div>
                 <div class="md:col-span-4 flex justify-end">
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition shadow-md">
@@ -77,12 +85,12 @@
                             <th class="p-3">Tijd</th>
                             <th class="p-3">Categorie</th>
                             <th class="p-3">Locatie</th>
-                            <th class="p-3">Omschrijving</th>
+                            <th class="p-3">Omschrijving & Foto</th>
                             <th class="p-3 text-right">Actie</th>
                         </tr>
                     </thead>
                     <tbody id="logTableBody" class="divide-y divide-slate-800 text-sm">
-                        <!-- Wordt dynamisch gevuld -->
+                        <!-- Dynamisch geladen -->
                     </tbody>
                 </table>
             </div>
@@ -90,55 +98,134 @@
     </div>
 
     <script>
-        // Automatisch huidige tijd invullen bij laden
+        // Opslag via LocalStorage (met base64 ondersteuning voor fotos)
+        let logs = JSON.parse(localStorage.getItem('beveiligings_logs_pro')) || [];
+
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('tijd').value = now.toISOString().slice(0,16);
-            loadEntries();
+            renderLogs();
         });
 
-        let logs = JSON.parse(localStorage.getItem('beveiligings_logs')) || [];
+        // Speech-to-Text implementatie
+        let recognition;
+        let isRecording = false;
 
+        function toggleSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Spraakherkenning wordt niet ondersteund in deze browser. Gebruik bij voorkeur Google Chrome of Safari.");
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'nl-NL';
+            recognition.interimResults = true;
+            recognition.continuous = true;
+
+            const statusEl = document.getElementById('speechStatus');
+            const micBtn = document.getElementById('micBtn');
+            const textEl = document.getElementById('omschrijving');
+
+            recognition.onstart = () => {
+                isRecording = true;
+                statusEl.classList.remove('hidden');
+                micBtn.classList.add('bg-red-600', 'text-white');
+                micBtn.classList.remove('bg-slate-700', 'text-indigo-300');
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                textEl.value = transcript;
+            };
+
+            recognition.onerror = () => {
+                stopSpeechUI();
+            };
+
+            recognition.onend = () => {
+                stopSpeechUI();
+            };
+
+            recognition.start();
+        }
+
+        function stopSpeechUI() {
+            isRecording = false;
+            document.getElementById('speechStatus').classList.add('hidden');
+            const micBtn = document.getElementById('micBtn');
+            micBtn.classList.remove('bg-red-600', 'text-white');
+            micBtn.classList.add('bg-slate-700', 'text-indigo-300');
+        }
+
+        // Toevoegen met foto verwerking naar Base64
         function addEntry(e) {
             e.preventDefault();
+            const fotoInput = document.getElementById('fotoInput');
+            
+            if (fotoInput.files && fotoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    saveNewEntryData(uploadEvent.target.result);
+                };
+                reader.readAsDataURL(fotoInput.files[0]);
+            } else {
+                saveNewEntryData(null);
+            }
+        }
+
+        function saveNewEntryData(fotoBase64) {
             const entry = {
                 id: Date.now(),
                 tijd: document.getElementById('tijd').value.replace('T', ' '),
                 categorie: document.getElementById('categorie').value,
                 locatie: document.getElementById('locatie').value,
-                omschrijving: document.getElementById('omschrijving').value
+                omschrijving: document.getElementById('omschrijving').value,
+                foto: fotoBase64
             };
 
-            logs.unshift.call(logs, entry); // Nieuwste bovenaan
-            saveAndRender();
+            logs.unshift(entry);
+            localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
             
-            // Formulier resetten behalve datum/tijd
+            // Formulier resetten behalve tijd
             document.getElementById('omschrijving').value = '';
             document.getElementById('locatie').value = '';
+            document.getElementById('fotoInput').value = '';
+            
+            renderLogs();
         }
 
         function deleteEntry(id) {
-            if(confirm('Weet je zeker dat je dit logitem wilt verwijderen?')) {
+            if(confirm('Weet je zeker dat je dit item wilt verwijderen?')) {
                 logs = logs.filter(item => item.id !== id);
-                saveAndRender();
+                localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
+                renderLogs();
             }
         }
 
-        function clearLog() {
-            if(confirm('Waarschuwing: Dit verwijdert het hele logboek op dit apparaat. Doorgaan?')) {
+        function clearLogs() {
+            if(confirm('Waarschuwing: Hiermee wordt het volledige logboek gewist. Doorgaan?')) {
                 logs = [];
-                saveAndRender();
+                localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
+                renderLogs();
             }
         }
 
-        function saveAndRender() {
-            localStorage.setItem('beveiligings_logs', JSON.stringify(logs));
+        function renderLogs() {
             const tbody = document.getElementById('logTableBody');
             document.getElementById('entryCount').innerText = `${logs.length} items`;
             
             if(logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nog geen gebeurtenissen geregistreerd voor deze dienst.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nog geen gebeurtenissen geregistreerd.</td></tr>`;
                 return;
             }
 
@@ -147,8 +234,11 @@
                     <td class="p-3 whitespace-nowrap text-slate-300 text-xs">${item.tijd}</td>
                     <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 text-xs rounded bg-slate-700 text-slate-200">${item.categorie}</span></td>
                     <td class="p-3 whitespace-nowrap text-slate-300">${item.locatie}</td>
-                    <td class="p-3 text-slate-100 max-w-xs truncate">${item.omschrijving}</td>
-                    <td class="p-3 text-right">
+                    <td class="p-3 text-slate-100">
+                        <p class="mb-1">${item.omschrijving}</p>
+                        ${item.foto ? `<a href="${item.foto}" target="_blank"><img src="${item.foto}" class="h-16 w-16 object-cover rounded border border-slate-700 mt-2 hover:opacity-80 transition cursor-pointer" title="Klik om te vergroten"></a>` : ''}
+                    </td>
+                    <td class="p-3 text-right whitespace-nowrap">
                         <button onclick="deleteEntry(${item.id})" class="text-red-400 hover:text-red-300 text-xs">Verwijder</button>
                     </td>
                 </tr>
@@ -165,16 +255,26 @@
             doc.text(`Gegenereerd op: ${new Date().toLocaleString('nl-NL')}`, 14, 28);
 
             let y = 40;
-            logs.forEach((item, index) => {
-                if (y > 270) { doc.addPage(); y = 20; }
+            logs.forEach((item) => {
+                if (y > 250) { doc.addPage(); y = 20; }
                 doc.setFont("helvetica", "bold");
                 doc.text(`[${item.tijd}] ${item.categorie} - ${item.locatie}`, 14, y);
                 doc.setFont("helvetica", "normal");
                 doc.text(item.omschrijving, 14, y + 6, { maxWidth: 180 });
-                y += 18;
+                
+                // Voeg evt foto toe aan PDF als deze aanwezig is
+                if (item.foto) {
+                    try {
+                        doc.addImage(item.foto, 'JPEG', 14, y + 14, 30, 30);
+                        y += 35;
+                    } catch(e) {
+                        // negeer eventuele renderfouten bij zware afbeeldingen
+                    }
+                }
+                y += 22;
             });
 
-            doc.save(`dienstlogboek_${new Date().toISOString().slice(0,10)}.pdf`);
+            doc.save(`beveiligingslogboek_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>
