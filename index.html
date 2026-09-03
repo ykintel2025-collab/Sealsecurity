@@ -3,42 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dienst Logboek - Beveiliging Pro</title>
+    <title>Dienst Logboek - Seal Security</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF en autoTable voor professionele PDF exports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans p-4 md:p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-4">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-800 pb-4 gap-4">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                    🛡️ Dienst Logboek <span class="text-xs bg-indigo-600 px-2 py-0.5 rounded-full text-white">PRO</span>
+                    🛡️ Dienst Logboek <span class="text-xs bg-amber-600 px-2 py-0.5 rounded-full text-white">Seal Security</span>
                 </h1>
-                <p class="text-sm text-slate-400">Inclusief Spraakherkenning & Foto-integratie</p>
+                <p class="text-sm text-slate-400">Onbeperkte projecten, spraakherkenning, zoeken & professionele PDF</p>
             </div>
-            <div class="mt-4 md:mt-0 flex gap-2">
-                <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
-                    📄 Export PDF
-                </button>
-                <button onclick="clearLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-sm transition">
-                    Wissen
+            <div class="flex gap-2 w-full md:w-auto">
+                <button onclick="exportPDF()" class="flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
+                    📄 Professionele PDF
                 </button>
             </div>
         </header>
 
+        <!-- Zoek- en Filterbalk -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 shadow grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
+                <input type="text" id="searchInput" oninput="filterLogs()" placeholder="Zoek op tekst, locatie..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">Filter op Categorie</label>
+                <select id="filterCategorie" onchange="filterLogs()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <option value="">Alle categorieën</option>
+                    <option value="Incident / Melding">Incident / Melding</option>
+                    <option value="Ronde / Controle">Ronde / Controle</option>
+                    <option value="Bezoeker / Levering">Bezoeker / Levering</option>
+                    <option value="Bijzonderheid">Bijzonderheid</option>
+                    <option value="Overdracht">Overdracht</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button onclick="resetFilters()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm transition">
+                    Filters wissen
+                </button>
+            </div>
+        </div>
+
         <!-- Invoer Formulier -->
-        <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-5 mb-8 shadow-lg">
-            <h2 class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
-            <form id="logForm" onsubmit="addEntry(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-8 shadow-lg">
+            <h2 id="formTitle" class="text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
+            <form id="logForm" onsubmit="saveEntry(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="hidden" id="editId">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Tijdstip</label>
-                    <input type="datetime-local" id="tijd" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="datetime-local" id="tijd" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Categorie</label>
-                    <select id="categorie" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <select id="categorie" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                         <option value="Incident / Melding">Incident / Melding</option>
                         <option value="Ronde / Controle">Ronde / Controle</option>
                         <option value="Bezoeker / Levering">Bezoeker / Levering</option>
@@ -48,81 +72,255 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Locatie</label>
-                    <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div class="md:col-span-4">
                     <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie</label>
-                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-700 hover:bg-slate-600 text-indigo-300 px-2 py-0.5 rounded flex items-center gap-1 transition">
-                            🎤 Spreek in (Speech-to-Text)
+                        <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie (Uitgebreid)</label>
+                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2 py-0.5 rounded flex items-center gap-1 transition">
+                            🎤 Spreek in
                         </button>
                     </div>
-                    <textarea id="omschrijving" rows="3" placeholder="Typ of spreek de gebeurtenis in..." required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    <textarea id="omschrijving" rows="4" placeholder="Typ of spreek de gedetailleerde gebeurtenis in..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
                     <p id="speechStatus" class="text-xs text-indigo-400 mt-1 hidden">Luisteren... Spreek nu duidelijk in.</p>
                 </div>
                 <div class="md:col-span-4">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Foto / Afbeelding toevoegen (Optioneel)</label>
-                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Foto / Afbeelding toevoegen</label>
+                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
                 </div>
-                <div class="md:col-span-4 flex justify-end">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition shadow-md">
-                        + Toevoegen aan Logboek
+                <div class="md:col-span-4 flex justify-end gap-2">
+                    <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm transition">Annuleren</button>
+                    <button type="submit" id="submitBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg text-sm font-medium transition shadow-md">
+                        + Toevoegen aan Database
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- Logboek Overzicht -->
-        <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl overflow-hidden shadow-lg">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-                <h3 class="font-semibold text-slate-200">Geregistreerde Gebeurtenissen</h3>
-                <span id="entryCount" class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-full">0 items</span>
+        <!-- Overzicht Kaartenlijst -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-semibold text-slate-200">Geregistreerde Incidenten & Gebeurtenissen</h3>
+                <span id="entryCount" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full">0 items</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-700 text-xs text-slate-400 bg-slate-900/50 uppercase">
-                            <th class="p-3">Tijd</th>
-                            <th class="p-3">Categorie</th>
-                            <th class="p-3">Locatie</th>
-                            <th class="p-3">Omschrijving & Foto</th>
-                            <th class="p-3 text-right">Actie</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logTableBody" class="divide-y divide-slate-800 text-sm">
-                        <!-- Dynamisch geladen -->
-                    </tbody>
-                </table>
+            <div id="logsContainer" class="divide-y divide-slate-800">
+                <!-- Dynamische kaarten -->
             </div>
         </div>
     </div>
 
-    <script>
-        // Opslag via LocalStorage (met base64 ondersteuning voor fotos)
-        let logs = JSON.parse(localStorage.getItem('beveiligings_logs_pro')) || [];
+    <!-- Modal voor foto vergroten -->
+    <div id="imageModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+        <img id="modalImg" class="max-h-[90vh] max-w-[90vw] rounded-lg border border-slate-700">
+    </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
+    <!-- Firebase SDK's (Modular v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==========================================
+        // JOUW FIREBASE CONFIGURATIE (SEAL SECURITY)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgMm2-kBESm1Mce2BGBTJtR9-pZ-EAo2I",
+            authDomain: "seal-security-eb8ab.firebaseapp.com",
+            projectId: "seal-security-eb8ab",
+            storageBucket: "seal-security-eb8ab.firebasestorage.app",
+            messagingSenderId: "885297612188",
+            appId: "1:885297612188:web:d4383846a102ae664d3459",
+            measurementId: "G-FM2RBMCT9F"
+        };
+
+        // Initialiseer Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allLogs = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setDefaultTime();
+            fetchLogsFromDatabase();
+        });
+
+        function setDefaultTime() {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('tijd').value = now.toISOString().slice(0,16);
-            renderLogs();
-        });
+        }
 
-        // Speech-to-Text implementatie
+        // Gegevens ophalen uit Firestore
+        async function fetchLogsFromDatabase() {
+            try {
+                const q = query(collection(db, "logboek"), orderBy("tijd", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                allLogs = [];
+                querySnapshot.forEach((docSnap) => {
+                    allLogs.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                renderLogs(allLogs);
+            } catch (error) {
+                console.error("Fout bij ophalen:", error);
+            }
+        }
+
+        // Opslaan of Bewerken in Firestore
+        window.saveEntry = async function(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const tijd = document.getElementById('tijd').value.replace('T', ' ');
+            const categorie = document.getElementById('categorie').value;
+            const locatie = document.getElementById('locatie').value;
+            const omschrijving = document.getElementById('omschrijving').value;
+            const fotoInput = document.getElementById('fotoInput');
+
+            let fotoBase64 = null;
+            if (editId) {
+                const existing = allLogs.find(item => item.id == editId);
+                fotoBase64 = existing ? existing.foto : null;
+            }
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(uploadEvent) {
+                    fotoBase64 = uploadEvent.target.result;
+                    await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64);
+                };
+                reader.readAsDataURL(fotoInput.files[0]);
+            } else {
+                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64);
+            }
+        }
+
+        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, foto) {
+            try {
+                if (editId) {
+                    const docRef = doc(db, "logboek", editId);
+                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, foto });
+                } else {
+                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, foto, createdAt: Date.now() });
+                }
+
+                resetForm();
+                fetchLogsFromDatabase();
+            } catch (error) {
+                alert('Fout bij opslaan in Firebase: ' + error.message);
+            }
+        }
+
+        window.deleteEntry = async function(id) {
+            if(confirm('Weet je zeker dat je dit logitem wilt verwijderen?')) {
+                try {
+                    await deleteDoc(doc(db, "logboek", id));
+                    fetchLogsFromDatabase();
+                } catch (error) {
+                    alert('Fout bij verwijderen: ' + error.message);
+                }
+            }
+        }
+
+        window.editEntry = function(id) {
+            const item = allLogs.find(l => l.id == id);
+            if (!item) return;
+
+            document.getElementById('editId').value = item.id;
+            document.getElementById('tijd').value = item.tijd.replace(' ', 'T');
+            document.getElementById('categorie').value = item.categorie;
+            document.getElementById('locatie').value = item.locatie;
+            document.getElementById('omschrijving').value = item.omschrijving;
+            
+            document.getElementById('formTitle').innerText = `Item Bewerken`;
+            document.getElementById('submitBtn').innerText = 'Wijzigingen Opslaan';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.resetForm = function() {
+            document.getElementById('logForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('formTitle').innerText = 'Nieuwe Gebeurtenis Registreren';
+            document.getElementById('submitBtn').innerText = '+ Toevoegen aan Database';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            setDefaultTime();
+        }
+
+        // Filter / Zoekfunctie
+        window.filterLogs = function() {
+            const queryText = document.getElementById('searchInput').value.toLowerCase();
+            const catFilter = document.getElementById('filterCategorie').value;
+
+            const filtered = allLogs.filter(item => {
+                const matchQuery = item.omschrijving.toLowerCase().includes(queryText) || 
+                                   item.locatie.toLowerCase().includes(queryText) || 
+                                   item.tijd.toLowerCase().includes(queryText);
+                const matchCat = catFilter === '' || item.categorie === catFilter;
+                return matchQuery && matchCat;
+            });
+
+            renderLogs(filtered);
+        }
+
+        window.resetFilters = function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterCategorie').value = '';
+            renderLogs(allLogs);
+        }
+
+        function renderLogs(logsToRender) {
+            const container = document.getElementById('logsContainer');
+            document.getElementById('entryCount').innerText = `${logsToRender.length} items`;
+            
+            if(logsToRender.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500">Geen gebeurtenissen gevonden.</div>`;
+                return;
+            }
+
+            container.innerHTML = logsToRender.map(item => `
+                <div class="p-5 hover:bg-slate-900/50 transition flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                            <span class="font-mono text-amber-400">${item.tijd}</span>
+                            <span>•</span>
+                            <span class="bg-slate-800 text-slate-200 px-2 py-0.5 rounded">${item.categorie}</span>
+                            <span>•</span>
+                            <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
+                        </div>
+                        <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed mt-2 bg-slate-950/50 p-3 rounded-lg border border-slate-800/80">${item.omschrijving}</p>
+                        ${item.foto ? `
+                            <div class="mt-2">
+                                <img src="${item.foto}" onclick="openImageModal('${item.foto}')" class="h-20 w-20 object-cover rounded border border-slate-800 cursor-pointer hover:opacity-80 transition shadow" title="Klik om te vergroten">
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="flex items-center gap-2 self-end md:self-center">
+                        <button onclick="editEntry('${item.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded text-xs transition">Bewerken</button>
+                        <button onclick="deleteEntry('${item.id}')" class="bg-red-900/30 hover:bg-red-900/50 text-red-400 px-3 py-1.5 rounded text-xs transition">Verwijder</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modals & Spraakherkenning globaal beschikbaar maken
+        window.openImageModal = function(src) {
+            document.getElementById('modalImg').src = src;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+        window.closeImageModal = function() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
         let recognition;
         let isRecording = false;
-
-        function toggleSpeechRecognition() {
+        window.toggleSpeechRecognition = function() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Spraakherkenning wordt niet ondersteund in deze browser. Gebruik bij voorkeur Google Chrome of Safari.");
+                alert("Spraakherkenning wordt niet ondersteund in deze browser. Gebruik Google Chrome of Safari.");
                 return;
             }
-
-            if (isRecording) {
-                recognition.stop();
-                return;
-            }
+            if (isRecording) { recognition.stop(); return; }
 
             recognition = new SpeechRecognition();
             recognition.lang = 'nl-NL';
@@ -137,9 +335,7 @@
                 isRecording = true;
                 statusEl.classList.remove('hidden');
                 micBtn.classList.add('bg-red-600', 'text-white');
-                micBtn.classList.remove('bg-slate-700', 'text-indigo-300');
             };
-
             recognition.onresult = (event) => {
                 let transcript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -147,15 +343,8 @@
                 }
                 textEl.value = transcript;
             };
-
-            recognition.onerror = () => {
-                stopSpeechUI();
-            };
-
-            recognition.onend = () => {
-                stopSpeechUI();
-            };
-
+            recognition.onerror = () => stopSpeechUI();
+            recognition.onend = () => stopSpeechUI();
             recognition.start();
         }
 
@@ -164,117 +353,43 @@
             document.getElementById('speechStatus').classList.add('hidden');
             const micBtn = document.getElementById('micBtn');
             micBtn.classList.remove('bg-red-600', 'text-white');
-            micBtn.classList.add('bg-slate-700', 'text-indigo-300');
+            micBtn.classList.add('bg-slate-800', 'text-indigo-300');
         }
 
-        // Toevoegen met foto verwerking naar Base64
-        function addEntry(e) {
-            e.preventDefault();
-            const fotoInput = document.getElementById('fotoInput');
-            
-            if (fotoInput.files && fotoInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(uploadEvent) {
-                    saveNewEntryData(uploadEvent.target.result);
-                };
-                reader.readAsDataURL(fotoInput.files[0]);
-            } else {
-                saveNewEntryData(null);
-            }
-        }
-
-        function saveNewEntryData(fotoBase64) {
-            const entry = {
-                id: Date.now(),
-                tijd: document.getElementById('tijd').value.replace('T', ' '),
-                categorie: document.getElementById('categorie').value,
-                locatie: document.getElementById('locatie').value,
-                omschrijving: document.getElementById('omschrijving').value,
-                foto: fotoBase64
-            };
-
-            logs.unshift(entry);
-            localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
-            
-            // Formulier resetten behalve tijd
-            document.getElementById('omschrijving').value = '';
-            document.getElementById('locatie').value = '';
-            document.getElementById('fotoInput').value = '';
-            
-            renderLogs();
-        }
-
-        function deleteEntry(id) {
-            if(confirm('Weet je zeker dat je dit item wilt verwijderen?')) {
-                logs = logs.filter(item => item.id !== id);
-                localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
-                renderLogs();
-            }
-        }
-
-        function clearLogs() {
-            if(confirm('Waarschuwing: Hiermee wordt het volledige logboek gewist. Doorgaan?')) {
-                logs = [];
-                localStorage.setItem('beveiligings_logs_pro', JSON.stringify(logs));
-                renderLogs();
-            }
-        }
-
-        function renderLogs() {
-            const tbody = document.getElementById('logTableBody');
-            document.getElementById('entryCount').innerText = `${logs.length} items`;
-            
-            if(logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Nog geen gebeurtenissen geregistreerd.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = logs.map(item => `
-                <tr class="hover:bg-slate-800/50 transition">
-                    <td class="p-3 whitespace-nowrap text-slate-300 text-xs">${item.tijd}</td>
-                    <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 text-xs rounded bg-slate-700 text-slate-200">${item.categorie}</span></td>
-                    <td class="p-3 whitespace-nowrap text-slate-300">${item.locatie}</td>
-                    <td class="p-3 text-slate-100">
-                        <p class="mb-1">${item.omschrijving}</p>
-                        ${item.foto ? `<a href="${item.foto}" target="_blank"><img src="${item.foto}" class="h-16 w-16 object-cover rounded border border-slate-700 mt-2 hover:opacity-80 transition cursor-pointer" title="Klik om te vergroten"></a>` : ''}
-                    </td>
-                    <td class="p-3 text-right whitespace-nowrap">
-                        <button onclick="deleteEntry(${item.id})" class="text-red-400 hover:text-red-300 text-xs">Verwijder</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function exportPDF() {
+        // PDF Export
+        window.exportPDF = function() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            doc.setFontSize(16);
-            doc.text("Officiële Dienstrapportage / Logboek", 14, 20);
+            doc.setFontSize(18);
+            doc.text("Officiële Dienstrapportage & Incidentenlogboek", 14, 20);
             doc.setFontSize(10);
+            doc.setTextColor(100);
             doc.text(`Gegenereerd op: ${new Date().toLocaleString('nl-NL')}`, 14, 28);
 
-            let y = 40;
-            logs.forEach((item) => {
-                if (y > 250) { doc.addPage(); y = 20; }
-                doc.setFont("helvetica", "bold");
-                doc.text(`[${item.tijd}] ${item.categorie} - ${item.locatie}`, 14, y);
-                doc.setFont("helvetica", "normal");
-                doc.text(item.omschrijving, 14, y + 6, { maxWidth: 180 });
-                
-                // Voeg evt foto toe aan PDF als deze aanwezig is
-                if (item.foto) {
-                    try {
-                        doc.addImage(item.foto, 'JPEG', 14, y + 14, 30, 30);
-                        y += 35;
-                    } catch(e) {
-                        // negeer eventuele renderfouten bij zware afbeeldingen
-                    }
+            const tableData = allLogs.map(item => [
+                item.tijd,
+                item.categorie,
+                item.locatie,
+                item.omschrijving
+            ]);
+
+            doc.autoTable({
+                startY: 35,
+                head: [['Tijd', 'Categorie', 'Locatie', 'Omschrijving / Actie']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [41, 37, 36] },
+                styles: { fontSize: 9, cellPadding: 4, overflow: 'linebreak' },
+                columnStyles: { 
+                    0: { cellWidth: 32 }, 
+                    1: { cellWidth: 30 }, 
+                    2: { cellWidth: 30 }, 
+                    3: { cellWidth: 'auto' } 
                 }
-                y += 22;
             });
 
-            doc.save(`beveiligingslogboek_${new Date().toISOString().slice(0,10)}.pdf`);
+            doc.save(`dienstlogboek_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>
