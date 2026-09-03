@@ -70,7 +70,7 @@
                         </div>
                     </div>
                     <textarea id="omschrijving" rows="3" placeholder="Typ de omschrijving of gebruik spraak..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
-                    <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Luistert continu... Spreek duidelijk in de microfoon. Stopt pas bij klik op knop.</p>
+                    <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Luistert continu... Spreek duidelijk in de microfoon. Stopt pas bij klik op 'Stop luisteren'.</p>
                 </div>
 
                 <div class="sm:col-span-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
@@ -465,7 +465,6 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // PDF Exporteren functie
         window.exportPDF = function() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -504,7 +503,6 @@
             document.getElementById('speechChoiceModal').classList.add('hidden');
         }
 
-        // Optie 1: Spraak naar tekst + audio automatisch opgeslagen
         let recognition = null;
         let isListening = false;
         let mediaRecorder = null;
@@ -515,11 +513,11 @@
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert("Spraakherkenning wordt niet ondersteund door deze browser.");
+                alert("Spraakherkenning wordt niet ondersteund door deze browser. Gebruik bij voorkeur Google Chrome of Safari.");
                 return;
             }
 
-            // Start ook MediaRecorder om de audio te bewaren voor automatische opslag
+            // Start tevens MediaRecorder om de audio te bewaren als automatische bijlage
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -542,14 +540,14 @@
             }
 
             if (isListening) {
-                if (recognition) recognition.stop();
+                stopSpeechRecognitionOnly();
                 return;
             }
 
             recognition = new SpeechRecognition();
             recognition.lang = 'nl-NL';
             recognition.interimResults = true;
-            recognition.continuous = true; // Zorgt dat hij door blijft gaan
+            recognition.continuous = true;
 
             const micBtn = document.getElementById('micBtn');
             const statusEl = document.getElementById('speechStatus');
@@ -564,37 +562,43 @@
             };
 
             recognition.onresult = function(event) {
+                let interimTranscript = '';
                 let finalTranscript = '';
+
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
-                if (finalTranscript) {
-                    const currentVal = textarea.value;
-                    textarea.value = currentVal ? currentVal + ' ' + finalTranscript : finalTranscript;
-                }
-            };
 
-            // KRITIEK: Vang 'onend' op en herstart automatisch indien de gebruiker niet op stoppen heeft gedrukt!
-            recognition.onend = function() {
-                if (isListening) {
-                    try {
-                        recognition.start(); // Direct herstarten zodat stilte of pauzes de opname niet afbreken
-                        return;
-                    } catch(e) {}
+                if (finalTranscript) {
+                    textarea.value = (textarea.value ? textarea.value.trim() + ' ' : '') + finalTranscript.trim();
                 }
-                stopSpeechCleanup();
             };
 
             recognition.onerror = function(event) {
-                console.error("Spraakherkenning fout:", event.error);
+                console.warn("Spraakherkenning event error:", event.error);
+            };
+
+            recognition.onend = function() {
+                // Automatisch herstarten zolang de gebruiker niet op stoppen heeft geklikt (voorkomt wegvallen bij korte stilte)
+                if (isListening) {
+                    try {
+                        recognition.start();
+                        return;
+                    } catch (e) {}
+                }
+                stopSpeechCleanup();
             };
 
             try {
                 recognition.start();
             } catch (err) {
-                console.error("Kon spraakherkenning niet starten:", err);
+                console.error("Kon herkenning niet starten:", err);
+                alert("Kon spraakherkenning niet starten. Controleer je microfoonrechten.");
+                stopSpeechCleanup();
             }
         }
 
@@ -640,15 +644,14 @@
                 };
 
                 recorder.start();
-                alert("🔴 Spraakbericht opname gestart...\nKlik op OK en spreek je bericht in. De opname loopt totdat je over 5 seconden bevestigt of op opslaan drukt.");
+                alert("🔴 Spraakbericht opname gestart...\nSpreek je bericht in. De opname loopt gedurende 15 seconden of totdat je dit bevestigt.");
                 
-                // Na 10 seconden of automatische stop
                 setTimeout(() => {
                     if(recorder.state === 'recording') {
                         recorder.stop();
                         stream.getTracks().forEach(track => track.stop());
                     }
-                }, 12000);
+                }, 15000);
 
             } catch (err) {
                 alert("Geen toegang tot microfoon mogelijk: " + err.message);
