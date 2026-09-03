@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dienst Logboek - Seal Security</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jsPDF en autoTable voor professionele PDF exports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -18,7 +17,7 @@
                 <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
                     🛡️ Dienst Logboek <span class="text-xs bg-amber-600 px-2 py-0.5 rounded-full text-white">Seal Security</span>
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media & uitklapbare inspectie</p>
+                <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media, tabs & recente incidenten</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
                 <button onclick="toggleFilterDrawer()" class="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
@@ -30,7 +29,7 @@
             </div>
         </header>
 
-        <!-- Verborgen Zoek- en Filterbalk (Inklapbaar) -->
+        <!-- Zoek- en Filterbalk -->
         <div id="filterDrawer" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 mb-5 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
@@ -88,15 +87,12 @@
                         </div>
                     </div>
                     <textarea id="omschrijving" rows="4" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
-                    
                     <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Spraakbericht wordt opgenomen... Klik nogmaals op de knop om te stoppen.</p>
                 </div>
 
-                <!-- 1 Slimme Mediacel (Foto, Video, Galerij) -->
                 <div class="sm:col-span-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
                     <label class="block text-xs font-medium text-slate-400 mb-1">📸📷 Media toevoegen (Foto, Video of uit Galerij)</label>
                     <input type="file" id="mediaInput" accept="image/*,video/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
-                    <p class="text-[11px] text-slate-500 mt-1">Op mobiel opent dit direct je camera (voor foto/video) of geeft de optie om te kiezen uit je galerij.</p>
                 </div>
 
                 <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
@@ -108,19 +104,39 @@
             </form>
         </div>
 
-        <!-- Overzicht Kaartenlijst -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+        <!-- Navigatie Tabs -->
+        <div class="flex border-b border-slate-800 mb-4 gap-2">
+            <button onclick="switchTab('alle')" id="tab-alle" class="px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition">
+                📋 Alle Gebeurtenissen
+            </button>
+            <button onclick="switchTab('incidenten')" id="tab-incidenten" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+                🚨 Incidenten Tabblad
+            </button>
+        </div>
+
+        <!-- Overzicht Kaartenlijst (Tab Inhoud) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg mb-8">
             <div class="p-4 border-b border-slate-800 flex justify-between items-center">
-                <h3 class="font-semibold text-slate-200 text-sm sm:text-base">Geregistreerde Incidenten & Gebeurtenissen</h3>
+                <h3 id="tabHeaderTitle" class="font-semibold text-slate-200 text-sm sm:text-base">Geregistreerde Gebeurtenissen</h3>
                 <span id="entryCount" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full">0 items</span>
             </div>
             <div id="logsContainer" class="divide-y divide-slate-800">
                 <!-- Dynamische uitklapbare kaarten -->
             </div>
         </div>
+
+        <!-- Sectie: Meest recente 3 incidenten onderin -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 shadow-lg">
+            <h3 class="font-semibold text-slate-200 text-sm sm:text-base mb-3 flex items-center gap-2">
+                ⚡ Meest Recente 3 Incidenten / Meldingen
+            </h3>
+            <div id="recentIncidentenContainer" class="divide-y divide-slate-800/60">
+                <!-- Wordt dynamisch gevuld -->
+            </div>
+        </div>
     </div>
 
-    <!-- Modal voor media vergroten -->
+    <!-- Modals -->
     <div id="mediaModal" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4" onclick="closeMediaModal()">
         <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
             <button onclick="closeMediaModal()" class="absolute -top-10 right-0 text-white bg-slate-800 px-3 py-1 rounded-lg text-sm">Sluiten ✕</button>
@@ -128,23 +144,20 @@
         </div>
     </div>
 
-    <!-- Modal voor Spraakbericht keuze -->
     <div id="audioChoiceModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
             <h3 class="text-base font-bold text-white flex items-center gap-2">🎙️ Spraakbericht Opties</h3>
             <p class="text-xs text-slate-300">Wat wil je met het spraakbericht doen?</p>
-            
             <div class="space-y-2 pt-2">
                 <button onclick="startAudioRecordingProcess(true)" class="w-full text-left p-3 bg-slate-950 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-800 rounded-lg transition">
                     <span class="block text-sm font-semibold text-indigo-300">📝 Omzetten naar tekst</span>
-                    <span class="block text-[11px] text-slate-400">Spraak wordt uitgeschreven in de omschrijving (audio wordt ook opgeslagen).</span>
+                    <span class="block text-[11px] text-slate-400">Spraak wordt uitgeschreven in de omschrijving.</span>
                 </button>
                 <button onclick="startAudioRecordingProcess(false)" class="w-full text-left p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg transition">
                     <span class="block text-sm font-semibold text-slate-200">💾 Alleen opslaan als audiobestand</span>
-                    <span class="block text-[11px] text-slate-400">Audio wordt als extra bijlage toegevoegd (omschrijving blijft handmatig).</span>
+                    <span class="block text-[11px] text-slate-400">Audio wordt als bijlage toegevoegd.</span>
                 </button>
             </div>
-
             <div class="flex justify-end pt-2">
                 <button onclick="closeAudioChoiceModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs transition">Annuleren</button>
             </div>
@@ -156,9 +169,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ==========================================
-        // JOUW FIREBASE CONFIGURATIE (SEAL SECURITY)
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCgMm2-kBESm1Mce2BGBTJtR9-pZ-EAo2I",
             authDomain: "seal-security-eb8ab.firebaseapp.com",
@@ -173,6 +183,7 @@
         const db = getFirestore(app);
 
         let allLogs = [];
+        let currentTab = 'alle'; // 'alle' of 'incidenten'
 
         window.addEventListener('DOMContentLoaded', () => {
             setDefaultTime();
@@ -186,11 +197,26 @@
         }
 
         window.toggleFilterDrawer = function() {
-            const drawer = document.getElementById('filterDrawer');
-            drawer.classList.toggle('hidden');
+            document.getElementById('filterDrawer').classList.toggle('hidden');
         }
 
-        // Gegevens ophalen uit Firestore
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const tabAlle = document.getElementById('tab-alle');
+            const tabIncidenten = document.getElementById('tab-incidenten');
+
+            if (tab === 'alle') {
+                tabAlle.className = "px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition";
+                tabIncidenten.className = "px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+                document.getElementById('tabHeaderTitle').innerText = "Geregistreerde Gebeurtenissen (Alles)";
+            } else {
+                tabIncidenten.className = "px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition";
+                tabAlle.className = "px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+                document.getElementById('tabHeaderTitle').innerText = "Incidenten & Meldingen (Afzonderlijk Tabblad)";
+            }
+            filterLogs();
+        }
+
         async function fetchLogsFromDatabase() {
             try {
                 const q = query(collection(db, "logboek"), orderBy("tijd", "desc"));
@@ -201,13 +227,13 @@
                     allLogs.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                renderLogs(allLogs);
+                filterLogs();
+                renderRecentIncidenten();
             } catch (error) {
                 console.error("Fout bij ophalen:", error);
             }
         }
 
-        // Opslaan of Bewerken in Firestore
         window.saveEntry = async function(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -215,12 +241,11 @@
             const categorie = document.getElementById('categorie').value;
             const locatie = document.getElementById('locatie').value;
             const omschrijving = document.getElementById('omschrijving').value;
-            
             const mediaInput = document.getElementById('mediaInput');
 
             let mediaBase64 = null;
             let mediaType = null;
-            let audioBase64Data = null; // Specifiek voor het spraakbericht
+            let audioBase64Data = null;
 
             if (editId) {
                 const existing = allLogs.find(item => item.id == editId);
@@ -231,23 +256,30 @@
                 }
             }
 
-            const processMedia = async () => {
-                if (audioBlob) {
-                    audioBase64Data = await blobToDataURL(audioBlob);
-                }
-                
-                if (mediaInput.files && mediaInput.files[0]) {
-                    const file = mediaInput.files[0];
-                    mediaBase64 = await readFileAsDataURL(file);
-                    if (file.type.startsWith('image/')) mediaType = 'image';
-                    else if (file.type.startsWith('video/')) mediaType = 'video';
-                    else mediaType = 'file';
-                }
+            if (audioBlob) {
+                audioBase64Data = await blobToDataURL(audioBlob);
+            }
+            
+            if (mediaInput.files && mediaInput.files[0]) {
+                const file = mediaInput.files[0];
+                mediaBase64 = await readFileAsDataURL(file);
+                if (file.type.startsWith('image/')) mediaType = 'image';
+                else if (file.type.startsWith('video/')) mediaType = 'video';
+                else mediaType = 'file';
+            }
 
-                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaBase64, mediaType, audioBase64Data);
-            };
-
-            processMedia();
+            try {
+                if (editId) {
+                    await updateDoc(doc(db, "logboek", editId), { tijd, categorie, locatie, omschrijving, mediaData: mediaBase64, mediaType, audioData: audioBase64Data });
+                } else {
+                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, mediaData: mediaBase64, mediaType, audioData: audioBase64Data, createdAt: Date.now() });
+                }
+                audioBlob = null;
+                resetForm();
+                fetchLogsFromDatabase();
+            } catch (error) {
+                alert('Fout bij opslaan in Firebase: ' + error.message);
+            }
         }
 
         function readFileAsDataURL(file) {
@@ -264,23 +296,6 @@
                 reader.onload = (e) => resolve(e.target.result);
                 reader.readAsDataURL(blob);
             });
-        }
-
-        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData) {
-            try {
-                if (editId) {
-                    const docRef = doc(db, "logboek", editId);
-                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData });
-                } else {
-                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, mediaData, mediaType, audioData, createdAt: Date.now() });
-                }
-
-                audioBlob = null;
-                resetForm();
-                fetchLogsFromDatabase();
-            } catch (error) {
-                alert('Fout bij opslaan in Firebase: ' + error.message);
-            }
         }
 
         window.deleteEntry = async function(id) {
@@ -307,7 +322,6 @@
             document.getElementById('formTitle').innerText = `Item Bewerken`;
             document.getElementById('submitBtn').innerText = 'Wijzigingen Opslaan';
             document.getElementById('cancelEditBtn').classList.remove('hidden');
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -321,17 +335,18 @@
             setDefaultTime();
         }
 
-        // Filter / Zoekfunctie
         window.filterLogs = function() {
             const queryText = document.getElementById('searchInput').value.toLowerCase();
             const catFilter = document.getElementById('filterCategorie').value;
 
             const filtered = allLogs.filter(item => {
+                // Tab logica: Als tab 'incidenten' is geselecteerd, filter standaard op categorie Incident / Melding
+                const matchTab = currentTab === 'alle' || item.categorie === 'Incident / Melding';
                 const matchQuery = item.omschrijving.toLowerCase().includes(queryText) || 
                                    item.locatie.toLowerCase().includes(queryText) || 
                                    item.tijd.toLowerCase().includes(queryText);
                 const matchCat = catFilter === '' || item.categorie === catFilter;
-                return matchQuery && matchCat;
+                return matchTab && matchQuery && matchCat;
             });
 
             renderLogs(filtered);
@@ -340,10 +355,9 @@
         window.resetFilters = function() {
             document.getElementById('searchInput').value = '';
             document.getElementById('filterCategorie').value = '';
-            renderLogs(allLogs);
+            filterLogs();
         }
 
-        // Renderen van uitklapbare log-kaarten
         function renderLogs(logsToRender) {
             const container = document.getElementById('logsContainer');
             document.getElementById('entryCount').innerText = `${logsToRender.length} items`;
@@ -355,7 +369,6 @@
 
             container.innerHTML = logsToRender.map(item => `
                 <div class="p-4 sm:p-5 hover:bg-slate-900/40 transition">
-                    <!-- Compacte balk (klik om te openen/sluiten) -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer" onclick="toggleCard('${item.id}')">
                         <div class="space-y-1 flex-1">
                             <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
@@ -376,14 +389,11 @@
                         </div>
                     </div>
 
-                    <!-- Uitklapbaar gedeelte -->
                     <div id="card-body-${item.id}" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-3">
                         <div>
                             <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Volledige omschrijving:</h4>
                             <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">${item.omschrijving}</p>
                         </div>
-
-                        <!-- Media & Spraakbericht weergave -->
                         <div class="flex flex-col gap-3">
                             ${item.audioData ? `
                                 <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
@@ -391,14 +401,13 @@
                                     <audio controls src="${item.audioData}" class="w-full h-10"></audio>
                                 </div>
                             ` : ''}
-
                             ${item.mediaData ? `
                                 <div>
                                     <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Bijgevoegde Media:</h4>
                                     <div class="flex flex-wrap gap-3">
                                         ${item.mediaType === 'image' ? `
                                             <div>
-                                                <img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
+                                                <img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow">
                                                 <span class="block text-[10px] text-center text-slate-400 mt-1">Foto</span>
                                             </div>
                                         ` : item.mediaType === 'video' ? `
@@ -416,20 +425,39 @@
             `).join('');
         }
 
+        // Rendere functie voor de 3 meest recente incidenten onderin
+        function renderRecentIncidenten() {
+            const container = document.getElementById('recentIncidentenContainer');
+            const incidenten = allLogs.filter(item => item.categorie === 'Incident / Melding').slice(0, 3);
+
+            if (incidenten.length === 0) {
+                container.innerHTML = `<div class="py-3 text-xs text-slate-500">Geen recente incidenten geregistreerd.</div>`;
+                return;
+            }
+
+            container.innerHTML = incidenten.map(item => `
+                <div class="py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="font-mono text-amber-400">${item.tijd}</span>
+                            <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
+                        </div>
+                        <p class="text-slate-300 text-xs line-clamp-1 mt-0.5">${item.omschrijving}</p>
+                    </div>
+                    <span class="text-[11px] bg-red-950/60 border border-red-900 text-red-300 px-2 py-0.5 rounded">Incident</span>
+                </div>
+            `).join('');
+        }
+
         window.toggleCard = function(id) {
-            const body = document.getElementById(`card-body-${id}`);
-            body.classList.toggle('hidden');
+            document.getElementById(`card-body-${id}`).classList.toggle('hidden');
         }
 
         window.openMediaModal = function(type, src) {
             const modal = document.getElementById('mediaModal');
             const container = document.getElementById('modalContentContainer');
-            
-            if (type === 'image') {
-                container.innerHTML = `<img src="${src}" class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700">`;
-            } else if (type === 'video') {
-                container.innerHTML = `<video src="${src}" controls autoplay class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700"></video>`;
-            }
+            if (type === 'image') container.innerHTML = `<img src="${src}" class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700">`;
+            else if (type === 'video') container.innerHTML = `<video src="${src}" controls autoplay class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700"></video>`;
             modal.classList.remove('hidden');
         }
 
@@ -438,7 +466,6 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // Spraakopname & Tekstomzetting logica
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
@@ -448,10 +475,8 @@
 
         window.promptAudioRecording = function() {
             if (!isRecordingAudio) {
-                // Toon de modal om te kiezen of tekst omgezet moet worden
                 document.getElementById('audioChoiceModal').classList.remove('hidden');
             } else {
-                // Als hij al aan staat, stopt een klik op de knop direct de opname
                 stopAudioRecording();
             }
         }
@@ -463,7 +488,6 @@
         window.startAudioRecordingProcess = async function(shouldTranscribe) {
             closeAudioChoiceModal();
             transcribeMode = shouldTranscribe;
-
             const statusEl = document.getElementById('speechStatus');
             const micBtn = document.getElementById('micBtn');
 
@@ -472,19 +496,11 @@
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
 
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-
+                mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
                 mediaRecorder.onstop = () => {
                     audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    
-                    // Als niet getranscribeerd is, zet een standaard melding in omschrijving (indien leeg)
-                    if (!transcribeMode) {
-                        const oms = document.getElementById('omschrijving');
-                        if (!oms.value.trim()) {
-                            oms.value = "[Spraakbericht toegevoegd]";
-                        }
+                    if (!transcribeMode && !document.getElementById('omschrijving').value.trim()) {
+                        document.getElementById('omschrijving').value = "[Spraakbericht toegevoegd]";
                     }
                 };
 
@@ -494,7 +510,6 @@
                 micBtn.innerText = "⏹️ Stop opname";
                 micBtn.classList.add('bg-red-600', 'text-white');
 
-                // Als gekozen is om om te zetten naar tekst
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (transcribeMode && SpeechRecognition) {
                     speechRecognitionInstance = new SpeechRecognition();
@@ -504,21 +519,13 @@
 
                     speechRecognitionInstance.onresult = (event) => {
                         let transcript = '';
-                        for (let i = 0; i < event.results.length; i++) {
-                            transcript += event.results[i][0].transcript;
-                        }
+                        for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
                         document.getElementById('omschrijving').value = transcript;
                     };
-
-                    speechRecognitionInstance.onerror = (event) => {
-                        console.error("Spraakherkenning fout:", event.error);
-                    };
-
                     speechRecognitionInstance.start();
                 }
-
             } catch (err) {
-                alert("Microfoonrechten geweigerd of niet beschikbaar op dit apparaat.");
+                alert("Microfoonrechten geweigerd of niet beschikbaar.");
             }
         }
 
@@ -527,16 +534,10 @@
                 mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
-
             if (speechRecognitionInstance) {
-                try {
-                    speechRecognitionInstance.stop();
-                } catch (e) {
-                    // Negeer eventuele al gestopte instanties
-                }
+                try { speechRecognitionInstance.stop(); } catch (e) {}
                 speechRecognitionInstance = null;
             }
-
             isRecordingAudio = false;
             document.getElementById('speechStatus').classList.add('hidden');
             const micBtn = document.getElementById('micBtn');
@@ -545,39 +546,24 @@
             micBtn.classList.add('bg-slate-800', 'text-indigo-300');
         }
 
-        // PDF Export
         window.exportPDF = function() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-
             doc.setFontSize(16);
             doc.text("Officiële Dienstrapportage - Seal Security", 14, 20);
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Gegenereerd op: ${new Date().toLocaleString('nl-NL')}`, 14, 28);
 
-            const tableData = allLogs.map(item => [
-                item.tijd,
-                item.categorie,
-                item.locatie,
-                item.omschrijving
-            ]);
-
+            const tableData = allLogs.map(item => [item.tijd, item.categorie, item.locatie, item.omschrijving]);
             doc.autoTable({
                 startY: 35,
                 head: [['Tijd', 'Categorie', 'Locatie', 'Omschrijving / Actie']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [41, 37, 36] },
-                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-                columnStyles: { 
-                    0: { cellWidth: 30 }, 
-                    1: { cellWidth: 28 }, 
-                    2: { cellWidth: 28 }, 
-                    3: { cellWidth: 'auto' } 
-                }
+                styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' }
             });
-
             doc.save(`dienstlogboek_${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
