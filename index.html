@@ -21,14 +21,17 @@
                 <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media & uitklapbare inspectie</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="exportPDF()" class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
+                <button onclick="toggleFilterDrawer()" class="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
+                    🔍 Zoeken / Filteren
+                </button>
+                <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
                     📄 Exporteer PDF
                 </button>
             </div>
         </header>
 
-        <!-- Zoek- en Filterbalk -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-5 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <!-- Verborgen Zoek- en Filterbalk (Inklapbaar) -->
+        <div id="filterDrawer" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 mb-5 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
                 <input type="text" id="searchInput" oninput="filterLogs()" placeholder="Zoek op tekst, locatie..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -74,33 +77,31 @@
                     <label class="block text-xs font-medium text-slate-400 mb-1">Locatie</label>
                     <input type="text" id="locatie" placeholder="Bijv. Hoofdingang / P2 / Terrein" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
+                
                 <div class="sm:col-span-2">
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie</label>
-                        <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md flex items-center gap-1 transition">
-                            🎤 Spreek in
-                        </button>
+                        <div class="flex gap-2">
+                            <button type="button" id="micBtn" onclick="toggleAudioRecording()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md flex items-center gap-1 transition">
+                                🎙️ Spraakbericht opnemen
+                            </button>
+                        </div>
                     </div>
-                    <textarea id="omschrijving" rows="4" placeholder="Typ of spreek de gedetailleerde gebeurtenis in..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
-                    <p id="speechStatus" class="text-xs text-indigo-400 mt-1 hidden">Luisteren... Spreek nu duidelijk in.</p>
+                    <textarea id="omschrijving" rows="4" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Spraakbericht wordt opgenomen... Klik nogmaals op de knop om te stoppen.</p>
                 </div>
 
-                <!-- Mobiele Media Opties: Foto & Video -->
-                <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">📸 Foto (Maken of Kiezen)</label>
-                        <input type="file" id="fotoInput" accept="image/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1">📹 Video (Opnemen of Kiezen)</label>
-                        <input type="file" id="videoInput" accept="video/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
-                    </div>
+                <!-- 1 Slimme Mediacel (Foto, Video, Galerij) -->
+                <div class="sm:col-span-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">📸📷 Media toevoegen (Foto, Video of uit Galerij)</label>
+                    <input type="file" id="mediaInput" accept="image/*,video/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
+                    <p class="text-[11px] text-slate-500 mt-1">Op mobiel opent dit direct je camera (voor foto/video) of geeft de optie om te kiezen uit je galerij.</p>
                 </div>
 
                 <div class="sm:col-span-2 flex justify-end gap-2 pt-2">
                     <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm transition">Annuleren</button>
                     <button type="submit" id="submitBtn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition shadow-md">
-                        + Toevoegen aan Database
+                        Opslaan
                     </button>
                 </div>
             </form>
@@ -160,6 +161,11 @@
             document.getElementById('tijd').value = now.toISOString().slice(0,16);
         }
 
+        window.toggleFilterDrawer = function() {
+            const drawer = document.getElementById('filterDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
         // Gegevens ophalen uit Firestore
         async function fetchLogsFromDatabase() {
             try {
@@ -177,7 +183,7 @@
             }
         }
 
-        // Opslaan of Bewerken in Firestore (inclusief conversie van foto en video naar base64)
+        // Opslaan of Bewerken in Firestore
         window.saveEntry = async function(e) {
             e.preventDefault();
             const editId = document.getElementById('editId').value;
@@ -186,32 +192,34 @@
             const locatie = document.getElementById('locatie').value;
             const omschrijving = document.getElementById('omschrijving').value;
             
-            const fotoInput = document.getElementById('fotoInput');
-            const videoInput = document.getElementById('videoInput');
+            const mediaInput = document.getElementById('mediaInput');
 
-            let fotoBase64 = null;
-            let videoBase64 = null;
+            let mediaBase64 = null;
+            let mediaType = null;
 
             if (editId) {
                 const existing = allLogs.find(item => item.id == editId);
                 if (existing) {
-                    fotoBase64 = existing.foto || null;
-                    videoBase64 = existing.video || null;
+                    mediaBase64 = existing.mediaData || null;
+                    mediaType = existing.mediaType || null;
                 }
             }
 
-            // Hulpfunctie om bestanden te verwerken
-            const processFiles = async () => {
-                if (fotoInput.files && fotoInput.files[0]) {
-                    fotoBase64 = await readFileAsDataURL(fotoInput.files[0]);
+            const processMedia = async () => {
+                if (audioBlob) {
+                    mediaBase64 = await blobToDataURL(audioBlob);
+                    mediaType = 'audio';
+                } else if (mediaInput.files && mediaInput.files[0]) {
+                    const file = mediaInput.files[0];
+                    mediaBase64 = await readFileAsDataURL(file);
+                    if (file.type.startsWith('image/')) mediaType = 'image';
+                    else if (file.type.startsWith('video/')) mediaType = 'video';
+                    else mediaType = 'file';
                 }
-                if (videoInput.files && videoInput.files[0]) {
-                    videoBase64 = await readFileAsDataURL(videoInput.files[0]);
-                }
-                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, fotoBase64, videoBase64);
+                await commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaBase64, mediaType);
             };
 
-            processFiles();
+            processMedia();
         }
 
         function readFileAsDataURL(file) {
@@ -222,15 +230,24 @@
             });
         }
 
-        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, foto, video) {
+        function blobToDataURL(blob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        async function commitToDatabase(editId, tijd, categorie, locatie, omschrijving, mediaData, mediaType) {
             try {
                 if (editId) {
                     const docRef = doc(db, "logboek", editId);
-                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, foto, video });
+                    await updateDoc(docRef, { tijd, categorie, locatie, omschrijving, mediaData, mediaType });
                 } else {
-                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, foto, video, createdAt: Date.now() });
+                    await addDoc(collection(db, "logboek"), { tijd, categorie, locatie, omschrijving, mediaData, mediaType, createdAt: Date.now() });
                 }
 
+                audioBlob = null;
                 resetForm();
                 fetchLogsFromDatabase();
             } catch (error) {
@@ -270,8 +287,9 @@
             document.getElementById('logForm').reset();
             document.getElementById('editId').value = '';
             document.getElementById('formTitle').innerText = 'Nieuwe Gebeurtenis Registreren';
-            document.getElementById('submitBtn').innerText = '+ Toevoegen aan Database';
+            document.getElementById('submitBtn').innerText = 'Opslaan';
             document.getElementById('cancelEditBtn').classList.add('hidden');
+            audioBlob = null;
             setDefaultTime();
         }
 
@@ -338,20 +356,24 @@
                         </div>
 
                         <!-- Media weergave in uitklapmenu -->
-                        ${(item.foto || item.video) ? `
+                        ${item.mediaData ? `
                             <div>
                                 <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">Bijgevoegde Media:</h4>
                                 <div class="flex flex-wrap gap-3">
-                                    ${item.foto ? `
+                                    ${item.mediaType === 'image' ? `
                                         <div>
-                                            <img src="${item.foto}" onclick="openMediaModal('image', '${item.foto}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
+                                            <img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-24 w-24 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" title="Klik om foto te vergroten">
                                             <span class="block text-[10px] text-center text-slate-400 mt-1">Foto</span>
                                         </div>
-                                    ` : ''}
-                                    ${item.video ? `
+                                    ` : item.mediaType === 'video' ? `
                                         <div>
-                                            <video src="${item.video}" onclick="openMediaModal('video', '${item.video}')" class="h-24 w-32 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" muted></video>
+                                            <video src="${item.mediaData}" onclick="openMediaModal('video', '${item.mediaData}')" class="h-24 w-32 object-cover rounded-lg border border-slate-700 cursor-pointer hover:opacity-80 transition shadow" muted></video>
                                             <span class="block text-[10px] text-center text-slate-400 mt-1">Video</span>
+                                        </div>
+                                    ` : item.mediaType === 'audio' ? `
+                                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col gap-2">
+                                            <span class="text-[10px] text-slate-400">🎙️ Spraakbericht</span>
+                                            <audio controls src="${item.mediaData}" class="h-10"></audio>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -362,17 +384,11 @@
             `).join('');
         }
 
-        // Functie om een log-kaart open of dicht te klappen
         window.toggleCard = function(id) {
             const body = document.getElementById(`card-body-${id}`);
-            if (body.classList.contains('hidden')) {
-                body.classList.remove('hidden');
-            } else {
-                body.classList.add('hidden');
-            }
+            body.classList.toggle('hidden');
         }
 
-        // Media Modal (Vergroten van foto of afspelen van video)
         window.openMediaModal = function(type, src) {
             const modal = document.getElementById('mediaModal');
             const container = document.getElementById('modalContentContainer');
@@ -382,7 +398,6 @@
             } else if (type === 'video') {
                 container.innerHTML = `<video src="${src}" controls autoplay class="max-h-[85vh] max-w-[90vw] rounded-lg border border-slate-700"></video>`;
             }
-            
             modal.classList.remove('hidden');
         }
 
@@ -391,49 +406,48 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // Spraakherkenning
-        let recognition;
-        let isRecording = false;
-        window.toggleSpeechRecognition = function() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("Spraakherkenning wordt niet ondersteund in deze browser. Gebruik Google Chrome of Safari.");
-                return;
-            }
-            if (isRecording) { recognition.stop(); return; }
+        // Handmatige spraakrecorder (blijft doorlopen tot je stopt)
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob = null;
+        let isRecordingAudio = false;
 
-            recognition = new SpeechRecognition();
-            recognition.lang = 'nl-NL';
-            recognition.interimResults = true;
-            recognition.continuous = true;
-
+        window.toggleAudioRecording = async function() {
             const statusEl = document.getElementById('speechStatus');
             const micBtn = document.getElementById('micBtn');
-            const textEl = document.getElementById('omschrijving');
 
-            recognition.onstart = () => {
-                isRecording = true;
-                statusEl.classList.remove('hidden');
-                micBtn.classList.add('bg-red-600', 'text-white');
-            };
-            recognition.onresult = (event) => {
-                let transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
+            if (!isRecordingAudio) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        document.getElementById('omschrijving').value = "[Spraakbericht toegevoegd bij deze melding]";
+                    };
+
+                    mediaRecorder.start();
+                    isRecordingAudio = true;
+                    statusEl.classList.remove('hidden');
+                    micBtn.innerText = "⏹️ Stop opname";
+                    micBtn.classList.add('bg-red-600', 'text-white');
+                } catch (err) {
+                    alert("Microfoonrechten geweigerd of niet beschikbaar op dit apparaat.");
                 }
-                textEl.value = transcript;
-            };
-            recognition.onerror = () => stopSpeechUI();
-            recognition.onend = () => stopSpeechUI();
-            recognition.start();
-        }
-
-        function stopSpeechUI() {
-            isRecording = false;
-            document.getElementById('speechStatus').classList.add('hidden');
-            const micBtn = document.getElementById('micBtn');
-            micBtn.classList.remove('bg-red-600', 'text-white');
-            micBtn.classList.add('bg-slate-800', 'text-indigo-300');
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecordingAudio = false;
+                statusEl.classList.add('hidden');
+                micBtn.innerText = "🎙️ Spraakbericht opnemen";
+                micBtn.classList.remove('bg-red-600', 'text-white');
+                micBtn.classList.add('bg-slate-800', 'text-indigo-300');
+            }
         }
 
         // PDF Export
