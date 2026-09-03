@@ -17,43 +17,26 @@
                 <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
                     🛡️ Dienst Logboek <span class="text-xs bg-amber-600 px-2 py-0.5 rounded-full text-white">Seal Security</span>
                 </h1>
-                <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media, tabs & recente incidenten</p>
+                <p class="text-xs sm:text-sm text-slate-400">Mobiel logboek met media en tabbladstructuur</p>
             </div>
             <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="toggleFilterDrawer()" class="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
-                    🔍 Zoeken / Filteren
-                </button>
                 <button onclick="exportPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1">
                     📄 Exporteer PDF
                 </button>
             </div>
         </header>
 
-        <!-- Zoek- en Filterbalk -->
-        <div id="filterDrawer" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 mb-5 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
-                <input type="text" id="searchInput" oninput="filterLogs()" placeholder="Zoek op tekst, locatie..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-            </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Filter op Categorie</label>
-                <select id="filterCategorie" onchange="filterLogs()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
-                    <option value="">Alle categorieën</option>
-                    <option value="Incident / Melding">Incident / Melding</option>
-                    <option value="Ronde / Controle">Ronde / Controle</option>
-                    <option value="Bezoeker / Levering">Bezoeker / Levering</option>
-                    <option value="Bijzonderheid">Bijzonderheid</option>
-                    <option value="Overdracht">Overdracht</option>
-                </select>
-            </div>
-            <div class="flex items-end">
-                <button onclick="resetFilters()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm transition">
-                    Filters wissen
-                </button>
-            </div>
+        <!-- Navigatie Tabs Bovenin -->
+        <div class="flex border-b border-slate-800 mb-6 gap-2">
+            <button onclick="switchTab('home')" id="tab-home" class="px-5 py-2.5 text-sm font-semibold border-b-2 border-indigo-500 text-white transition flex items-center gap-2">
+                🏠 Home / Recente Logs
+            </button>
+            <button onclick="switchTab('alle')" id="tab-alle" class="px-5 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+                📋 Alle Registraties
+            </button>
         </div>
 
-        <!-- Invoer Formulier -->
+        <!-- Invoer Formulier (Altijd handig bovenaan of direct te gebruiken) -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 mb-8 shadow-lg">
             <h2 id="formTitle" class="text-base sm:text-lg font-semibold mb-4 text-slate-200">Nieuwe Gebeurtenis Registreren</h2>
             <form id="logForm" onsubmit="saveEntry(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -86,12 +69,12 @@
                             </button>
                         </div>
                     </div>
-                    <textarea id="omschrijving" rows="4" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+                    <textarea id="omschrijving" rows="3" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
                     <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Spraakbericht wordt opgenomen... Klik nogmaals op de knop om te stoppen.</p>
                 </div>
 
                 <div class="sm:col-span-2 p-3 bg-slate-950/60 rounded-lg border border-slate-800">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">📸📷 Media toevoegen (Foto, Video of uit Galerij)</label>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">📸📷 Media toevoegen (Foto of Video)</label>
                     <input type="file" id="mediaInput" accept="image/*,video/*" capture="environment" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-white hover:file:bg-slate-700 cursor-pointer">
                 </div>
 
@@ -104,34 +87,58 @@
             </form>
         </div>
 
-        <!-- Navigatie Tabs -->
-        <div class="flex border-b border-slate-800 mb-4 gap-2">
-            <button onclick="switchTab('alle')" id="tab-alle" class="px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition">
-                📋 Alle Gebeurtenissen
-            </button>
-            <button onclick="switchTab('incidenten')" id="tab-incidenten" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
-                🚨 Incidenten Tabblad
-            </button>
-        </div>
-
-        <!-- Overzicht Kaartenlijst (Tab Inhoud) -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg mb-8">
-            <div class="p-4 border-b border-slate-800 flex justify-between items-center">
-                <h3 id="tabHeaderTitle" class="font-semibold text-slate-200 text-sm sm:text-base">Geregistreerde Gebeurtenissen</h3>
-                <span id="entryCount" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full">0 items</span>
-            </div>
-            <div id="logsContainer" class="divide-y divide-slate-800">
-                <!-- Dynamische uitklapbare kaarten -->
+        <!-- TAB 1: HOME / RECENTE LOGS (Standaard zichtbaar) -->
+        <div id="section-home" class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-slate-200 text-base flex items-center gap-2">
+                        ⚡ De 3 Meest Recente Registraties
+                    </h3>
+                    <button onclick="switchTab('alle')" class="text-xs text-indigo-400 hover:text-indigo-300 underline">
+                        Bekijk alle registraties →
+                    </button>
+                </div>
+                <div id="homeRecentContainer" class="divide-y divide-slate-800">
+                    <!-- Wordt dynamisch gevuld met max 3 items -->
+                </div>
             </div>
         </div>
 
-        <!-- Sectie: Meest recente 3 incidenten onderin -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5 shadow-lg">
-            <h3 class="font-semibold text-slate-200 text-sm sm:text-base mb-3 flex items-center gap-2">
-                ⚡ Meest Recente 3 Incidenten / Meldingen
-            </h3>
-            <div id="recentIncidentenContainer" class="divide-y divide-slate-800/60">
-                <!-- Wordt dynamisch gevuld -->
+        <!-- TAB 2: ALLE REGISTRATIES (Standaard verborgen) -->
+        <div id="section-alle" class="hidden space-y-4">
+            <!-- Zoek- en Filterbalk -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Zoeken in logboek</label>
+                    <input type="text" id="searchInput" oninput="filterAllLogs()" placeholder="Zoek op tekst, locatie..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Filter op Categorie</label>
+                    <select id="filterCategorie" onchange="filterAllLogs()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <option value="">Alle categorieën</option>
+                        <option value="Incident / Melding">Incident / Melding</option>
+                        <option value="Ronde / Controle">Ronde / Controle</option>
+                        <option value="Bezoeker / Levering">Bezoeker / Levering</option>
+                        <option value="Bijzonderheid">Bijzonderheid</option>
+                        <option value="Overdracht">Overdracht</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="resetFilters()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm transition">
+                        Filters wissen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Volledige Lijst Overzicht -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center">
+                    <h3 class="font-semibold text-slate-200 text-base">Alle Geregistreerde Gebeurtenissen</h3>
+                    <span id="entryCount" class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full">0 items</span>
+                </div>
+                <div id="allLogsContainer" class="divide-y divide-slate-800">
+                    <!-- Wordt dynamisch gevuld met alle items -->
+                </div>
             </div>
         </div>
     </div>
@@ -183,7 +190,6 @@
         const db = getFirestore(app);
 
         let allLogs = [];
-        let currentTab = 'alle'; // 'alle' of 'incidenten'
 
         window.addEventListener('DOMContentLoaded', () => {
             setDefaultTime();
@@ -196,25 +202,24 @@
             document.getElementById('tijd').value = now.toISOString().slice(0,16);
         }
 
-        window.toggleFilterDrawer = function() {
-            document.getElementById('filterDrawer').classList.toggle('hidden');
-        }
-
         window.switchTab = function(tab) {
-            currentTab = tab;
+            const tabHome = document.getElementById('tab-home');
             const tabAlle = document.getElementById('tab-alle');
-            const tabIncidenten = document.getElementById('tab-incidenten');
+            const sectionHome = document.getElementById('section-home');
+            const sectionAlle = document.getElementById('section-alle');
 
-            if (tab === 'alle') {
-                tabAlle.className = "px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition";
-                tabIncidenten.className = "px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-                document.getElementById('tabHeaderTitle').innerText = "Geregistreerde Gebeurtenissen (Alles)";
+            if (tab === 'home') {
+                tabHome.className = "px-5 py-2.5 text-sm font-semibold border-b-2 border-indigo-500 text-white transition flex items-center gap-2";
+                tabAlle.className = "px-5 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2";
+                sectionHome.classList.remove('hidden');
+                sectionAlle.classList.add('hidden');
             } else {
-                tabIncidenten.className = "px-4 py-2 text-sm font-semibold border-b-2 border-indigo-500 text-white transition";
-                tabAlle.className = "px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
-                document.getElementById('tabHeaderTitle').innerText = "Incidenten & Meldingen (Afzonderlijk Tabblad)";
+                tabAlle.className = "px-5 py-2.5 text-sm font-semibold border-b-2 border-indigo-500 text-white transition flex items-center gap-2";
+                tabHome.className = "px-5 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center gap-2";
+                sectionAlle.classList.remove('hidden');
+                sectionHome.classList.add('hidden');
+                filterAllLogs();
             }
-            filterLogs();
         }
 
         async function fetchLogsFromDatabase() {
@@ -227,8 +232,8 @@
                     allLogs.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                filterLogs();
-                renderRecentIncidenten();
+                renderHomeRecent();
+                filterAllLogs();
             } catch (error) {
                 console.error("Fout bij ophalen:", error);
             }
@@ -335,41 +340,75 @@
             setDefaultTime();
         }
 
-        window.filterLogs = function() {
+        // Render alleen de top 3 meest recente logs voor het Home scherm
+        function renderHomeRecent() {
+            const container = document.getElementById('homeRecentContainer');
+            const recentItems = allLogs.slice(0, 3);
+
+            if (recentItems.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-500 text-xs">Geen recente gebeurtenissen geregistreerd.</div>`;
+                return;
+            }
+
+            container.innerHTML = recentItems.map(item => `
+                <div class="py-3 first:pt-0 last:pb-0">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 cursor-pointer" onclick="toggleCard('home-${item.id}')">
+                        <div class="space-y-1 flex-1">
+                            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                                <span class="font-mono text-amber-400 font-semibold">${item.tijd}</span>
+                                <span>•</span>
+                                <span class="bg-slate-800 text-slate-200 px-2 py-0.5 rounded">${item.categorie}</span>
+                                <span>•</span>
+                                <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
+                            </div>
+                            <p class="text-slate-300 text-xs line-clamp-1 mt-1">${item.omschrijving}</p>
+                        </div>
+                        <span class="text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2.5 py-1 rounded-md">Details ▾</span>
+                    </div>
+
+                    <div id="card-body-home-${item.id}" class="hidden mt-3 pt-3 border-t border-slate-800/80 space-y-3">
+                        <p class="text-slate-100 text-xs whitespace-pre-wrap leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">${item.omschrijving}</p>
+                        ${item.audioData ? `<audio controls src="${item.audioData}" class="w-full h-8"></audio>` : ''}
+                        ${item.mediaData && item.mediaType === 'image' ? `<img src="${item.mediaData}" onclick="openMediaModal('image', '${item.mediaData}')" class="h-20 w-20 object-cover rounded-lg border border-slate-700 cursor-pointer">` : ''}
+                        ${item.mediaData && item.mediaType === 'video' ? `<video src="${item.mediaData}" onclick="openMediaModal('video', '${item.mediaData}')" class="h-20 w-28 object-cover rounded-lg border border-slate-700 cursor-pointer" muted></video>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.filterAllLogs = function() {
             const queryText = document.getElementById('searchInput').value.toLowerCase();
             const catFilter = document.getElementById('filterCategorie').value;
 
             const filtered = allLogs.filter(item => {
-                // Tab logica: Als tab 'incidenten' is geselecteerd, filter standaard op categorie Incident / Melding
-                const matchTab = currentTab === 'alle' || item.categorie === 'Incident / Melding';
                 const matchQuery = item.omschrijving.toLowerCase().includes(queryText) || 
                                    item.locatie.toLowerCase().includes(queryText) || 
                                    item.tijd.toLowerCase().includes(queryText);
                 const matchCat = catFilter === '' || item.categorie === catFilter;
-                return matchTab && matchQuery && matchCat;
+                return matchQuery && matchCat;
             });
 
-            renderLogs(filtered);
+            renderAllLogsList(filtered);
         }
 
         window.resetFilters = function() {
             document.getElementById('searchInput').value = '';
             document.getElementById('filterCategorie').value = '';
-            filterLogs();
+            filterAllLogs();
         }
 
-        function renderLogs(logsToRender) {
-            const container = document.getElementById('logsContainer');
+        function renderAllLogsList(logsToRender) {
+            const container = document.getElementById('allLogsContainer');
             document.getElementById('entryCount').innerText = `${logsToRender.length} items`;
             
             if(logsToRender.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-slate-500">Geen gebeurtenissen gevonden.</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-sm">Geen gebeurtenissen gevonden.</div>`;
                 return;
             }
 
             container.innerHTML = logsToRender.map(item => `
                 <div class="p-4 sm:p-5 hover:bg-slate-900/40 transition">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer" onclick="toggleCard('${item.id}')">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer" onclick="toggleCard('all-${item.id}')">
                         <div class="space-y-1 flex-1">
                             <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400">
                                 <span class="font-mono text-amber-400 font-semibold">${item.tijd}</span>
@@ -389,7 +428,7 @@
                         </div>
                     </div>
 
-                    <div id="card-body-${item.id}" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-3">
+                    <div id="card-body-all-${item.id}" class="hidden mt-4 pt-4 border-t border-slate-800/80 space-y-3">
                         <div>
                             <h4 class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Volledige omschrijving:</h4>
                             <p class="text-slate-100 text-sm whitespace-pre-wrap leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">${item.omschrijving}</p>
@@ -425,32 +464,8 @@
             `).join('');
         }
 
-        // Rendere functie voor de 3 meest recente incidenten onderin
-        function renderRecentIncidenten() {
-            const container = document.getElementById('recentIncidentenContainer');
-            const incidenten = allLogs.filter(item => item.categorie === 'Incident / Melding').slice(0, 3);
-
-            if (incidenten.length === 0) {
-                container.innerHTML = `<div class="py-3 text-xs text-slate-500">Geen recente incidenten geregistreerd.</div>`;
-                return;
-            }
-
-            container.innerHTML = incidenten.map(item => `
-                <div class="py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div>
-                        <div class="flex items-center gap-2 text-xs">
-                            <span class="font-mono text-amber-400">${item.tijd}</span>
-                            <span class="text-slate-300 font-medium">📍 ${item.locatie}</span>
-                        </div>
-                        <p class="text-slate-300 text-xs line-clamp-1 mt-0.5">${item.omschrijving}</p>
-                    </div>
-                    <span class="text-[11px] bg-red-950/60 border border-red-900 text-red-300 px-2 py-0.5 rounded">Incident</span>
-                </div>
-            `).join('');
-        }
-
-        window.toggleCard = function(id) {
-            document.getElementById(`card-body-${id}`).classList.toggle('hidden');
+        window.toggleCard = function(uniqueId) {
+            document.getElementById(`card-body-${uniqueId}`).classList.toggle('hidden');
         }
 
         window.openMediaModal = function(type, src) {
