@@ -438,7 +438,7 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // Spraakopname logica met keuzevraag vooraf
+        // Spraakopname & Tekstomzetting logica
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
@@ -504,11 +504,16 @@
 
                     speechRecognitionInstance.onresult = (event) => {
                         let transcript = '';
-                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                        for (let i = 0; i < event.results.length; i++) {
                             transcript += event.results[i][0].transcript;
                         }
                         document.getElementById('omschrijving').value = transcript;
                     };
+
+                    speechRecognitionInstance.onerror = (event) => {
+                        console.error("Spraakherkenning fout:", event.error);
+                    };
+
                     speechRecognitionInstance.start();
                 }
 
@@ -524,7 +529,12 @@
             }
 
             if (speechRecognitionInstance) {
-                speechRecognitionInstance.stop();
+                try {
+                    speechRecognitionInstance.stop();
+                } catch (e) {
+                    // Negeer eventuele al gestopte instanties
+                }
+                speechRecognitionInstance = null;
             }
 
             isRecordingAudio = false;
