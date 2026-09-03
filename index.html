@@ -82,22 +82,13 @@
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-medium text-slate-400">Omschrijving / Actie</label>
                         <div class="flex gap-2">
-                            <button type="button" id="micBtn" onclick="toggleAudioRecording()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md flex items-center gap-1 transition">
+                            <button type="button" id="micBtn" onclick="promptAudioRecording()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-md flex items-center gap-1 transition">
                                 🎙️ Spraakbericht opnemen
                             </button>
                         </div>
                     </div>
                     <textarea id="omschrijving" rows="4" placeholder="Typ de omschrijving of neem hieronder een spraakbericht op..." required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
                     
-                    <!-- Optie om spraak naar tekst om te zetten -->
-                    <div id="transcribeOptionContainer" class="hidden mt-2 p-2.5 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-between">
-                        <span class="text-xs text-slate-300">Spraakbericht direct omzetten naar tekst in omschrijving?</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="transcribeToggle" class="sr-only peer">
-                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                        </label>
-                    </div>
-
                     <p id="speechStatus" class="text-xs text-red-400 mt-1 hidden font-semibold animate-pulse">🔴 Spraakbericht wordt opgenomen... Klik nogmaals op de knop om te stoppen.</p>
                 </div>
 
@@ -134,6 +125,29 @@
         <div class="relative max-w-full max-h-full flex items-center justify-center" onclick="event.stopPropagation()">
             <button onclick="closeMediaModal()" class="absolute -top-10 right-0 text-white bg-slate-800 px-3 py-1 rounded-lg text-sm">Sluiten ✕</button>
             <div id="modalContentContainer"></div>
+        </div>
+    </div>
+
+    <!-- Modal voor Spraakbericht keuze -->
+    <div id="audioChoiceModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">🎙️ Spraakbericht Opties</h3>
+            <p class="text-xs text-slate-300">Wat wil je met het spraakbericht doen?</p>
+            
+            <div class="space-y-2 pt-2">
+                <button onclick="startAudioRecordingProcess(true)" class="w-full text-left p-3 bg-slate-950 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-800 rounded-lg transition">
+                    <span class="block text-sm font-semibold text-indigo-300">📝 Omzetten naar tekst</span>
+                    <span class="block text-[11px] text-slate-400">Spraak wordt uitgeschreven in de omschrijving (audio wordt ook opgeslagen).</span>
+                </button>
+                <button onclick="startAudioRecordingProcess(false)" class="w-full text-left p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg transition">
+                    <span class="block text-sm font-semibold text-slate-200">💾 Alleen opslaan als audiobestand</span>
+                    <span class="block text-[11px] text-slate-400">Audio wordt als extra bijlage toegevoegd (omschrijving blijft handmatig).</span>
+                </button>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeAudioChoiceModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs transition">Annuleren</button>
+            </div>
         </div>
     </div>
 
@@ -303,7 +317,6 @@
             document.getElementById('formTitle').innerText = 'Nieuwe Gebeurtenis Registreren';
             document.getElementById('submitBtn').innerText = 'Opslaan';
             document.getElementById('cancelEditBtn').classList.add('hidden');
-            document.getElementById('transcribeOptionContainer').classList.add('hidden');
             audioBlob = null;
             setDefaultTime();
         }
@@ -425,84 +438,101 @@
             document.getElementById('modalContentContainer').innerHTML = '';
         }
 
-        // Handmatige spraakrecorder + optionele live spraak-naar-tekst omzetting
+        // Spraakopname logica met keuzevraag vooraf
         let mediaRecorder;
         let audioChunks = [];
         let audioBlob = null;
         let isRecordingAudio = false;
         let speechRecognitionInstance = null;
+        let transcribeMode = false;
 
-        window.toggleAudioRecording = async function() {
+        window.promptAudioRecording = function() {
+            if (!isRecordingAudio) {
+                // Toon de modal om te kiezen of tekst omgezet moet worden
+                document.getElementById('audioChoiceModal').classList.remove('hidden');
+            } else {
+                // Als hij al aan staat, stopt een klik op de knop direct de opname
+                stopAudioRecording();
+            }
+        }
+
+        window.closeAudioChoiceModal = function() {
+            document.getElementById('audioChoiceModal').classList.add('hidden');
+        }
+
+        window.startAudioRecordingProcess = async function(shouldTranscribe) {
+            closeAudioChoiceModal();
+            transcribeMode = shouldTranscribe;
+
             const statusEl = document.getElementById('speechStatus');
             const micBtn = document.getElementById('micBtn');
-            const transcribeOptionContainer = document.getElementById('transcribeOptionContainer');
-            const transcribeToggle = document.getElementById('transcribeToggle');
 
-            if (!isRecordingAudio) {
-                try {
-                    // Start audio opname voor opslag
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
 
-                    mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
-                    };
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
 
-                    mediaRecorder.onstop = () => {
-                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    };
-
-                    mediaRecorder.start();
-                    isRecordingAudio = true;
-                    statusEl.classList.remove('hidden');
-                    micBtn.innerText = "⏹️ Stop opname";
-                    micBtn.classList.add('bg-red-600', 'text-white');
-                    transcribeOptionContainer.classList.remove('hidden');
-
-                    // Optioneel: als de gebruiker de schakelaar aan heeft gezet, start ook live tekstherkenning
-                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    if (SpeechRecognition && transcribeToggle.checked) {
-                        speechRecognitionInstance = new SpeechRecognition();
-                        speechRecognitionInstance.lang = 'nl-NL';
-                        speechRecognitionInstance.interimResults = true;
-                        speechRecognitionInstance.continuous = true;
-
-                        speechRecognitionInstance.onresult = (event) => {
-                            let transcript = '';
-                            for (let i = event.resultIndex; i < event.results.length; i++) {
-                                transcript += event.results[i][0].transcript;
-                            }
-                            document.getElementById('omschrijving').value = transcript;
-                        };
-                        speechRecognitionInstance.start();
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    // Als niet getranscribeerd is, zet een standaard melding in omschrijving (indien leeg)
+                    if (!transcribeMode) {
+                        const oms = document.getElementById('omschrijving');
+                        if (!oms.value.trim()) {
+                            oms.value = "[Spraakbericht toegevoegd]";
+                        }
                     }
+                };
 
-                } catch (err) {
-                    alert("Microfoonrechten geweigerd of niet beschikbaar op dit apparaat.");
+                mediaRecorder.start();
+                isRecordingAudio = true;
+                statusEl.classList.remove('hidden');
+                micBtn.innerText = "⏹️ Stop opname";
+                micBtn.classList.add('bg-red-600', 'text-white');
+
+                // Als gekozen is om om te zetten naar tekst
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (transcribeMode && SpeechRecognition) {
+                    speechRecognitionInstance = new SpeechRecognition();
+                    speechRecognitionInstance.lang = 'nl-NL';
+                    speechRecognitionInstance.interimResults = true;
+                    speechRecognitionInstance.continuous = true;
+
+                    speechRecognitionInstance.onresult = (event) => {
+                        let transcript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            transcript += event.results[i][0].transcript;
+                        }
+                        document.getElementById('omschrijving').value = transcript;
+                    };
+                    speechRecognitionInstance.start();
                 }
-            } else {
-                // Stop audio opname
+
+            } catch (err) {
+                alert("Microfoonrechten geweigerd of niet beschikbaar op dit apparaat.");
+            }
+        }
+
+        function stopAudioRecording() {
+            if (mediaRecorder && isRecordingAudio) {
                 mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
-
-                if (speechRecognitionInstance) {
-                    speechRecognitionInstance.stop();
-                }
-
-                isRecordingAudio = false;
-                statusEl.classList.add('hidden');
-                micBtn.innerText = "🎙️ Spraakbericht opnemen";
-                micBtn.classList.remove('bg-red-600', 'text-white');
-                micBtn.classList.add('bg-slate-800', 'text-indigo-300');
-                
-                // Als schakelaar aan stond, melding geven dat tekst is ingevuld
-                if (transcribeToggle.checked) {
-                    // Laat ingevulde tekst staan
-                } else {
-                    document.getElementById('omschrijving').value = "[Spraakbericht toegevoegd]";
-                }
             }
+
+            if (speechRecognitionInstance) {
+                speechRecognitionInstance.stop();
+            }
+
+            isRecordingAudio = false;
+            document.getElementById('speechStatus').classList.add('hidden');
+            const micBtn = document.getElementById('micBtn');
+            micBtn.innerText = "🎙️ Spraakbericht opnemen";
+            micBtn.classList.remove('bg-red-600', 'text-white');
+            micBtn.classList.add('bg-slate-800', 'text-indigo-300');
         }
 
         // PDF Export
